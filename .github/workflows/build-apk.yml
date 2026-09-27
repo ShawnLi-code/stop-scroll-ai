@@ -1,0 +1,68 @@
+name: Build and Release StopScroll APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.7
+
+      - name: Build Release APK
+        run: |
+          gradle assembleRelease --stacktrace
+
+      - name: Rename and Prepare APK
+        run: |
+          mkdir -p release_output
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.0.apk
+          ls -lh release_output/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StopScrollAI-v1.0.0-APK
+          path: release_output/StopScrollAI-v1.0.0.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: StopScroll AI v1.0.0 专属自律安装包
+          body: |
+            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.0 正式发布
+            
+            #### 核心功能：
+            1. **目标应用启动瞬间拦截**（小红书、抖音、B站、快手、微博等）；
+            2. **意图与专注时长设定**（打开前强制明确目标）；
+            3. **AI 动态屏幕护航监督**（通过无障碍提取文字，极速调用 DeepSeek 判断是否偏离目标）；
+            4. **偏离目标连续报警与超时强制退回桌面**；
+            5. **支持自定义 API Key 与模型配置**。
+            
+            #### 安装指引（针对 OPPO Find X9 / ColorOS）：
+            1. 下载下方的 `StopScrollAI-v1.0.0.apk` 并安装；
+            2. 打开应用信息 -> 右上角三个点 -> 点击 **“允许受限制的设置”**；
+            3. 进入系统设置 -> 无障碍 -> 开启 **【别刷了 AI】** 服务；
+            4. 授予悬浮窗权限与后台无限制电池权限即可！
+          files: release_output/StopScrollAI-v1.0.0.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

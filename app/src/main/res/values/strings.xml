@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">别刷了 AI</string>
+    <string name="accessibility_service_label">别刷了 AI - 意图与自律守护服务</string>
+    <string name="accessibility_service_description">用于实时识别目标应用启动，并在您浏览时协助AI监督是否偏离预定学习/查询目标。</string>
+</resources>
