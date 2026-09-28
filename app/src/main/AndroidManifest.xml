@@ -9,10 +9,7 @@
     <!-- 悬浮窗/顶层弹窗权限 -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <!-- 前台服务与保活 -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 保活与白名单 -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <!-- 查询前台活跃包名（辅助无障碍） -->
@@ -64,9 +61,6 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
-        <property
-            android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-            android:value="Self-discipline screen time and intention monitoring service" />
     </application>
 
 </manifest>
