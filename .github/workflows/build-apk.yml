@@ -34,27 +34,33 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release_output
-          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.3.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.4.apk
           ls -lh release_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StopScrollAI-v1.0.3-APK
-          path: release_output/StopScrollAI-v1.0.3.apk
+          name: StopScrollAI-v1.0.4-APK
+          path: release_output/StopScrollAI-v1.0.4.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.3
-          name: StopScroll AI v1.0.3 正式验证版 (支持Chrome等测试应用与完全防闪退)
+          tag_name: v1.0.4
+          name: StopScroll AI v1.0.4 (刚性主动倒计时打断 + 防手滑划掉保护)
           body: |
-            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.3
+            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.4
             
-            #### 本次更新：
-            1. **导出 InterceptDialogActivity**：确保系统与无障碍服务唤起弹窗不受任何权限冲突；
-            2. **预设支持 Chrome 浏览器**：方便在没有安装小红书/抖音的设备或模拟器上快速测试拦截；
-            3. **弹窗防抖与全屏深色沉浸**：彻底杜绝瞬间闪退回桌面的问题。
-          files: release_output/StopScrollAI-v1.0.3.apk
+            #### 核心重磅升级：
+            1. **刚性主动倒计时打断（不配置 AI 也 100% 准时生效）**：
+               - 移除了过去依赖屏幕触摸的被动检测机制，改用系统级 Handler 主动定时器；
+               - 无论在刷什么视频，时间一到毫秒级主动强震动 + 弹出全屏「⏰ 专注时间已到！」红色卡片，当场打断，绝不错过；
+            2. **防手滑误划掉杀后台机制**：
+               - 主界面设置 `excludeFromRecents="true"`，不出现在最近多任务列表中，想误划都划不掉！
+               - 保护无障碍服务不被误杀断连；
+            3. **全新的即勾即存反馈与监控看板**：
+               - 勾选应用即刻提示生效；
+               - 增加「🎯 当前已受控应用列表」状态看板与底部全局保存大按钮。
+          files: release_output/StopScrollAI-v1.0.4.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

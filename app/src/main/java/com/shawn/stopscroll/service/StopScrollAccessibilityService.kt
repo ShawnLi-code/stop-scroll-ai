@@ -28,10 +28,64 @@ class StopScrollAccessibilityService : AccessibilityService() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var lastInterceptTime = 0L
 
+    // 刚性主动倒计时任务
+    private val timeoutRunnable = Runnable {
+        handleTimeout()
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
+        instance = this
         Log.i("StopScroll", "AccessibilityService connected successfully!")
+
+        // 注册主动倒计时回调
+        SessionManager.onSessionStartedCallback = { pkg, goal, minutes ->
+            scheduleActiveTimer(pkg, goal, minutes)
+        }
+        SessionManager.onSessionEndedCallback = {
+            mainHandler.removeCallbacks(timeoutRunnable)
+        }
+
         showToast("【别刷了 AI】守护服务已激活！")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (instance == this) {
+            instance = null
+        }
+        mainHandler.removeCallbacks(timeoutRunnable)
+    }
+
+    /**
+     * 主动刚性倒计时：时间一到，毫秒级主动弹出告警卡片，不依赖任何屏幕触摸事件
+     */
+    fun scheduleActiveTimer(packageName: String, userGoal: String, durationMinutes: Int) {
+        mainHandler.removeCallbacks(timeoutRunnable)
+        val delayMillis = durationMinutes * 60 * 1000L
+        Log.i("StopScroll", "Scheduled proactive timeout timer for $packageName in $delayMillis ms ($durationMinutes minutes)")
+        mainHandler.postDelayed(timeoutRunnable, delayMillis)
+    }
+
+    private fun handleTimeout() {
+        val session = SessionManager.currentSession ?: return
+        val pkg = session.packageName
+        val goal = session.userGoal
+        val minutes = ((session.expireTime - session.startTime) / 60000L).coerceAtLeast(1)
+
+        Log.i("StopScroll", "⏰ PROACTIVE TIMER FIRED! Time is up for $pkg ($goal)")
+        SessionManager.endSession()
+
+        // 强震动提示
+        vibrateDevice(800L)
+
+        // 立即强弹超时阻断卡片
+        triggerAlert(
+            pkg,
+            "⏰ 专注时间已到！",
+            "你设定的【$goal】(${minutes}分钟) 时长已用尽！\n\n请立刻放下手机，让眼睛和大脑休息一下吧。",
+            "⏰"
+        )
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -45,7 +99,7 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 return
             }
 
-            // 2. 检查是否是被监控的应用（小红书、抖音、B站等）
+            // 2. 检查是否是被监控的应用（小红书、抖音、Chrome等）
             if (!PrefManager.isMonitored(pkgName)) {
                 return
             }
@@ -68,22 +122,15 @@ class StopScrollAccessibilityService : AccessibilityService() {
             val session = SessionManager.currentSession ?: return
             if (session.packageName != pkgName) return
 
-            // A. 超时检查
+            // 兜底检查超时（正常情况下会被主动定时器先行触发）
             if (SessionManager.isExpired()) {
-                SessionManager.endSession()
-                vibrateDevice(500L)
-                triggerAlert(
-                    pkgName,
-                    "⏰ 专注时间已到！",
-                    "设定的时长已用尽，请放下手机，给大脑和眼睛休息一下吧。",
-                    "⏰"
-                )
+                handleTimeout()
                 return
             }
 
-            // B. AI 动态屏幕内容监督（节流控制：每 10 秒采样一次）
+            // B. AI 动态屏幕内容监督（仅当配置了 API Key 且节流 10 秒采样）
             val now = System.currentTimeMillis()
-            if (now - session.lastAiCheckTime > 10000L && !session.isCheckingAi) {
+            if (PrefManager.apiKey.isNotBlank() && now - session.lastAiCheckTime > 10000L && !session.isCheckingAi) {
                 session.lastAiCheckTime = now
                 val rootNode = rootInActiveWindow ?: return
                 val extractedTexts = mutableListOf<String>()
@@ -92,8 +139,7 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 val combined = extractedTexts.joinToString(" | ")
                 Log.d("StopScroll", "Screen texts extracted (${extractedTexts.size} items): $combined")
 
-                // 只要抓到有效文字且配置了 API Key 就发送给 AI 分析
-                if (combined.length > 8 && PrefManager.apiKey.isNotBlank()) {
+                if (combined.length > 8) {
                     session.isCheckingAi = true
                     serviceScope.launch {
                         try {
@@ -117,7 +163,6 @@ class StopScrollAccessibilityService : AccessibilityService() {
                                     )
                                 }
                             } else {
-                                // 只要符合目标，清空违规计数
                                 session.consecutiveViolations = 0
                             }
                         } catch (t: Throwable) {
@@ -134,7 +179,7 @@ class StopScrollAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * 打开意图拦截全屏卡片（绝不在此时按 HOME 键，由卡片完全覆盖屏幕并获得焦点）
+     * 打开意图拦截全屏卡片（绝不按 HOME 键，由卡片全屏占领屏幕）
      */
     private fun interceptApp(packageName: String) {
         try {
@@ -192,7 +237,6 @@ class StopScrollAccessibilityService : AccessibilityService() {
     }
 
     private fun isNoiseWord(str: String): Boolean {
-        // 过滤系统纯功能性单字与点赞数字，但保留带#的话题标签
         return str.matches(Regex("^(关注|点赞|评论|转发|收藏|分享|我|推荐|发现|同城|消息|搜索|返回|返回上一页|[0-9]+(\\.[0-9]+)?[万wW]?)$"))
     }
 
@@ -228,5 +272,10 @@ class StopScrollAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {
         Log.w("StopScroll", "AccessibilityService onInterrupt")
+    }
+
+    companion object {
+        var instance: StopScrollAccessibilityService? = null
+            private set
     }
 }

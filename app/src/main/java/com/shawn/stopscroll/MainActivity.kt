@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
+import android.widget.CheckBox
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -34,11 +35,11 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updatePermissionStatuses()
+        updateMonitoredSummary()
     }
 
     override fun onPause() {
         super.onPause()
-        // 自动保存所有设置，防止用户未点击“保存设置”就离开
         saveAllConfig()
     }
 
@@ -55,6 +56,9 @@ class MainActivity : AppCompatActivity() {
         binding.cbBilibili.isChecked = monitored.contains("tv.danmaku.bili")
         binding.cbKuaishou.isChecked = monitored.contains("com.smile.gifmaker")
         binding.cbWeibo.isChecked = monitored.contains("com.sina.weibo")
+        binding.cbChrome.isChecked = monitored.contains("com.android.chrome")
+
+        updateMonitoredSummary()
     }
 
     private fun initListeners() {
@@ -102,7 +106,7 @@ class MainActivity : AppCompatActivity() {
             val model = binding.etModelName.text.toString().trim()
 
             if (key.isEmpty()) {
-                Toast.makeText(this, "请先输入 API Key！", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "请先输入 API Key！(选配，不配也可正常拦截)", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -112,7 +116,7 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 val res = AiService.testConnection(key, url, model)
                 binding.btnTestAi.isEnabled = true
-                binding.btnTestAi.text = "测试连接"
+                binding.btnTestAi.text = "测试 AI 接口连通性"
 
                 res.fold(
                     onSuccess = { msg ->
@@ -126,10 +130,52 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Save Config
-        binding.btnSaveConfig.setOnClickListener {
+        // Checkbox listeners with instant feedback and save
+        setupCheckboxListener(binding.cbXhs, "com.xingin.xhs", "小红书")
+        setupCheckboxListener(binding.cbDouyin, "com.ss.android.ugc.aweme", "抖音")
+        setupCheckboxListener(binding.cbBilibili, "tv.danmaku.bili", "哔哩哔哩")
+        setupCheckboxListener(binding.cbKuaishou, "com.smile.gifmaker", "快手")
+        setupCheckboxListener(binding.cbWeibo, "com.sina.weibo", "微博")
+        setupCheckboxListener(binding.cbChrome, "com.android.chrome", "Chrome 浏览器")
+
+        // Global Save Button
+        binding.btnSaveAll.setOnClickListener {
             saveAllConfig()
-            Toast.makeText(this, "💾 设置已成功保存！", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "💾 全部自律配置与应用监控已成功生效！", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupCheckboxListener(cb: CheckBox, pkg: String, name: String) {
+        cb.setOnCheckedChangeListener { _, isChecked ->
+            val set = PrefManager.monitoredPackages.toMutableSet()
+            if (isChecked) {
+                set.add(pkg)
+                Toast.makeText(this, "✅ 已开启【$name】自律拦截", Toast.LENGTH_SHORT).show()
+            } else {
+                set.remove(pkg)
+                Toast.makeText(this, "⚪ 已解除【$name】监控", Toast.LENGTH_SHORT).show()
+            }
+            PrefManager.monitoredPackages = set
+            updateMonitoredSummary()
+        }
+    }
+
+    private fun updateMonitoredSummary() {
+        val set = PrefManager.monitoredPackages
+        val names = mutableListOf<String>()
+        if (set.contains("com.xingin.xhs")) names.add("小红书")
+        if (set.contains("com.ss.android.ugc.aweme")) names.add("抖音")
+        if (set.contains("tv.danmaku.bili")) names.add("B站")
+        if (set.contains("com.smile.gifmaker")) names.add("快手")
+        if (set.contains("com.sina.weibo")) names.add("微博")
+        if (set.contains("com.android.chrome")) names.add("Chrome")
+
+        if (names.isEmpty()) {
+            binding.tvMonitoredSummary.text = "⚠️ 当前未勾选任何监控应用"
+            binding.tvMonitoredSummary.setTextColor(getColor(R.color.warning))
+        } else {
+            binding.tvMonitoredSummary.text = "🎯 当前已受控应用 (${names.size}个)：${names.joinToString("、")}"
+            binding.tvMonitoredSummary.setTextColor(getColor(R.color.primary))
         }
     }
 
@@ -144,8 +190,10 @@ class MainActivity : AppCompatActivity() {
         if (binding.cbBilibili.isChecked) set.add("tv.danmaku.bili")
         if (binding.cbKuaishou.isChecked) set.add("com.smile.gifmaker")
         if (binding.cbWeibo.isChecked) set.add("com.sina.weibo")
+        if (binding.cbChrome.isChecked) set.add("com.android.chrome")
 
         PrefManager.monitoredPackages = set
+        updateMonitoredSummary()
     }
 
     private fun updatePermissionStatuses() {

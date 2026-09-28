@@ -29,9 +29,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StopScroll">
 
-        <!-- 主设置页面 -->
+        <!-- 主设置页面 (excludeFromRecents="true" 防止在多任务列表被手滑划掉导致无障碍断连) -->
         <activity
             android:name=".MainActivity"
+            android:excludeFromRecents="true"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>

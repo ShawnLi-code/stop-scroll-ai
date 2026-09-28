@@ -18,6 +18,9 @@ object SessionManager {
     @Volatile
     var isInterceptDialogShowing: Boolean = false
 
+    var onSessionStartedCallback: ((packageName: String, goal: String, minutes: Int) -> Unit)? = null
+    var onSessionEndedCallback: (() -> Unit)? = null
+
     @Synchronized
     fun startSession(packageName: String, userGoal: String, durationMinutes: Int) {
         val now = System.currentTimeMillis()
@@ -28,11 +31,13 @@ object SessionManager {
             startTime = now,
             expireTime = expire
         )
+        onSessionStartedCallback?.invoke(packageName, userGoal, durationMinutes)
     }
 
     @Synchronized
     fun endSession() {
         currentSession = null
+        onSessionEndedCallback?.invoke()
     }
 
     @Synchronized
@@ -40,7 +45,7 @@ object SessionManager {
         val s = currentSession ?: return false
         if (s.packageName != packageName) return false
         if (System.currentTimeMillis() >= s.expireTime) {
-            currentSession = null
+            // Note: Do NOT nullify here silently; let the active timer trigger the alert!
             return false
         }
         return true

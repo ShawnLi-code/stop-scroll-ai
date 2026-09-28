@@ -18,14 +18,13 @@ class InterceptDialogActivity : AppCompatActivity() {
         binding = ActivityInterceptBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val mode = intent.getStringExtra(EXTRA_MODE) ?: MODE_INTERCEPT
-        targetPackage = intent.getStringExtra(EXTRA_PACKAGE) ?: ""
+        handleIntent(intent)
+    }
 
-        if (mode == MODE_ALERT) {
-            setupAlertMode()
-        } else {
-            setupInterceptMode()
-        }
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
     }
 
     override fun onResume() {
@@ -38,13 +37,26 @@ class InterceptDialogActivity : AppCompatActivity() {
         SessionManager.isInterceptDialogShowing = false
     }
 
-    private fun setupAlertMode() {
+    private fun handleIntent(intent: Intent?) {
+        if (intent == null) return
+
+        val mode = intent.getStringExtra(EXTRA_MODE) ?: MODE_INTERCEPT
+        targetPackage = intent.getStringExtra(EXTRA_PACKAGE) ?: ""
+
+        if (mode == MODE_ALERT) {
+            setupAlertMode(intent)
+        } else {
+            setupInterceptMode()
+        }
+    }
+
+    private fun setupAlertMode(intent: Intent) {
         binding.layoutInterceptCard.visibility = View.GONE
         binding.layoutAlertCard.visibility = View.VISIBLE
 
-        val icon = intent.getStringExtra(EXTRA_ICON) ?: "🚫"
-        val title = intent.getStringExtra(EXTRA_TITLE) ?: "使用已被强制中断"
-        val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "已为你强制中断！请放下手机。"
+        val icon = intent.getStringExtra(EXTRA_ICON) ?: "⏰"
+        val title = intent.getStringExtra(EXTRA_TITLE) ?: "专注时间已到！"
+        val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "你设定的专注时长已用尽！\n请立刻放下手机，让眼睛和大脑休息一下吧。"
 
         binding.tvAlertIcon.text = icon
         binding.tvAlertTitle.text = title
@@ -77,7 +89,7 @@ class InterceptDialogActivity : AppCompatActivity() {
                 R.id.chip15 -> durationMinutes = 15
             }
 
-            // Start session in SessionManager
+            // Start session in SessionManager (which automatically schedules proactive timer!)
             SessionManager.startSession(targetPackage, goal, durationMinutes)
             Toast.makeText(this, "🎯 目标已设定：$goal (${durationMinutes}分钟)，AI已开始守护！", Toast.LENGTH_SHORT).show()
 
