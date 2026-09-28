@@ -34,7 +34,8 @@ object PrefManager {
             "com.ss.android.ugc.aweme",   // 抖音
             "tv.danmaku.bili",           // 哔哩哔哩
             "com.smile.gifmaker",        // 快手
-            "com.sina.weibo"             // 微博
+            "com.sina.weibo",            // 微博
+            "com.android.chrome"         // 浏览器（方便在模拟器/手机快速测试）
         )) ?: emptySet()
         set(value) = prefs.edit().putStringSet(KEY_PACKAGES, value).apply()
 

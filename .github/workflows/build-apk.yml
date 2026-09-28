@@ -34,36 +34,27 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release_output
-          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.2.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.3.apk
           ls -lh release_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StopScrollAI-v1.0.2-APK
-          path: release_output/StopScrollAI-v1.0.2.apk
+          name: StopScrollAI-v1.0.3-APK
+          path: release_output/StopScrollAI-v1.0.3.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.2
-          name: StopScroll AI v1.0.2 深度修复版 (解决界面闪退与拦截死循环)
+          tag_name: v1.0.3
+          name: StopScroll AI v1.0.3 正式验证版 (支持Chrome等测试应用与完全防闪退)
           body: |
-            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.2 深度修复版
+            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.3
             
-            #### 核心 Bug 彻底修复：
-            1. **修复“弹出来的界面瞬间消失/小红书与B站瞬间退回”的问题**：
-               - 移除了启动拦截卡片时的竞争性 HOME 键触发，防止系统异步关闭刚弹出的界面；
-               - 严格过滤无障碍事件类型（仅在 `TYPE_WINDOW_STATE_CHANGED` 窗口切换时拦截），杜绝内容变化事件导致的死循环闪退；
-               - 增加 1.5 秒拦截防抖与全局弹窗展示状态锁。
-            2. **拦截卡片全屏化与防穿透**：
-               - 拦截卡片采用深色全屏沉浸覆盖，瞬间切断底层目标应用的事件分发；
-            3. **新增【超时与偏离目标】强中断全屏卡片 + 强震动提醒**：
-               - 解决 ColorOS 对后台 Toast 的屏蔽问题；
-               - 偏离目标或时间用尽时，手机强震动并弹出专用中断卡片，彻底避免返回桌面触发二次误判；
-            4. **自动保存 API Key 与短视频文本提取增强**：
-               - 页面切换自动保存 API Key；
-               - 增强对抖音、小红书短视频标签（如 `#口播`）的文本捕获能力。
-          files: release_output/StopScrollAI-v1.0.2.apk
+            #### 本次更新：
+            1. **导出 InterceptDialogActivity**：确保系统与无障碍服务唤起弹窗不受任何权限冲突；
+            2. **预设支持 Chrome 浏览器**：方便在没有安装小红书/抖音的设备或模拟器上快速测试拦截；
+            3. **弹窗防抖与全屏深色沉浸**：彻底杜绝瞬间闪退回桌面的问题。
+          files: release_output/StopScrollAI-v1.0.3.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

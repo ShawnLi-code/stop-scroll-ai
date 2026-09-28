@@ -118,6 +118,7 @@ class InterceptDialogActivity : AppCompatActivity() {
                 "tv.danmaku.bili" -> "哔哩哔哩"
                 "com.smile.gifmaker" -> "快手"
                 "com.sina.weibo" -> "微博"
+                "com.android.chrome" -> "Chrome 浏览器"
                 else -> pkg
             }
         }
