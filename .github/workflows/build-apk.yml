@@ -34,27 +34,36 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release_output
-          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.1.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.2.apk
           ls -lh release_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StopScrollAI-v1.0.1-APK
-          path: release_output/StopScrollAI-v1.0.1.apk
+          name: StopScrollAI-v1.0.2-APK
+          path: release_output/StopScrollAI-v1.0.2.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.1
-          name: StopScroll AI v1.0.1 修复版 (解决Android 14无障碍启动异常)
+          tag_name: v1.0.2
+          name: StopScroll AI v1.0.2 深度修复版 (解决界面闪退与拦截死循环)
           body: |
-            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.1 修复版
+            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.2 深度修复版
             
-            #### 修复内容：
-            - **解决 ColorOS / Android 14+ 上无障碍服务报错“无法运行，点按即可查看相关信息”的问题**；
-            - 移除高版本系统对前台服务类型的冲突，采用系统级原生守护；
-            - 全面加强无障碍事件监听与节点提取的异常防御，杜绝闪退。
-          files: release_output/StopScrollAI-v1.0.1.apk
+            #### 核心 Bug 彻底修复：
+            1. **修复“弹出来的界面瞬间消失/小红书与B站瞬间退回”的问题**：
+               - 移除了启动拦截卡片时的竞争性 HOME 键触发，防止系统异步关闭刚弹出的界面；
+               - 严格过滤无障碍事件类型（仅在 `TYPE_WINDOW_STATE_CHANGED` 窗口切换时拦截），杜绝内容变化事件导致的死循环闪退；
+               - 增加 1.5 秒拦截防抖与全局弹窗展示状态锁。
+            2. **拦截卡片全屏化与防穿透**：
+               - 拦截卡片采用深色全屏沉浸覆盖，瞬间切断底层目标应用的事件分发；
+            3. **新增【超时与偏离目标】强中断全屏卡片 + 强震动提醒**：
+               - 解决 ColorOS 对后台 Toast 的屏蔽问题；
+               - 偏离目标或时间用尽时，手机强震动并弹出专用中断卡片，彻底避免返回桌面触发二次误判；
+            4. **自动保存 API Key 与短视频文本提取增强**：
+               - 页面切换自动保存 API Key；
+               - 增强对抖音、小红书短视频标签（如 `#口播`）的文本捕获能力。
+          files: release_output/StopScrollAI-v1.0.2.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

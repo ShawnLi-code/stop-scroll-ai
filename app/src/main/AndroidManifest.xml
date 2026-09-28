@@ -9,6 +9,9 @@
     <!-- 悬浮窗/顶层弹窗权限 -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
+    <!-- 震动权限（偏离目标/超时强震动提醒） -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <!-- 保活与白名单 -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
@@ -37,7 +40,7 @@
             </intent-filter>
         </activity>
 
-        <!-- 拦截弹窗 Activity（透明无边框、不显示在多任务列表） -->
+        <!-- 拦截与强中断 Activity（全屏覆盖、排除多任务、防止事件穿透） -->
         <activity
             android:name=".InterceptDialogActivity"
             android:excludeFromRecents="true"

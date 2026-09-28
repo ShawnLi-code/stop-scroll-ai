@@ -15,6 +15,9 @@ object SessionManager {
     var currentSession: ActiveSession? = null
         private set
 
+    @Volatile
+    var isInterceptDialogShowing: Boolean = false
+
     @Synchronized
     fun startSession(packageName: String, userGoal: String, durationMinutes: Int) {
         val now = System.currentTimeMillis()

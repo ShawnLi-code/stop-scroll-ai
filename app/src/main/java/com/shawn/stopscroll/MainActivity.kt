@@ -36,6 +36,12 @@ class MainActivity : AppCompatActivity() {
         updatePermissionStatuses()
     }
 
+    override fun onPause() {
+        super.onPause()
+        // 自动保存所有设置，防止用户未点击“保存设置”就离开
+        saveAllConfig()
+    }
+
     private fun initViews() {
         // Load AI Config
         binding.etApiKey.setText(PrefManager.apiKey)
@@ -110,7 +116,8 @@ class MainActivity : AppCompatActivity() {
 
                 res.fold(
                     onSuccess = { msg ->
-                        Toast.makeText(this@MainActivity, "✅ $msg", Toast.LENGTH_LONG).show()
+                        saveAllConfig()
+                        Toast.makeText(this@MainActivity, "✅ $msg (已自动保存)", Toast.LENGTH_LONG).show()
                     },
                     onFailure = { err ->
                         Toast.makeText(this@MainActivity, "❌ 连接失败: ${err.message}", Toast.LENGTH_LONG).show()
