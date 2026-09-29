@@ -8,6 +8,7 @@ class StopScrollApp : Application() {
         super.onCreate()
         instance = this
         PrefManager.init(this)
+        com.shawn.stopscroll.data.RecordManager.init(this)
     }
 
     companion object {

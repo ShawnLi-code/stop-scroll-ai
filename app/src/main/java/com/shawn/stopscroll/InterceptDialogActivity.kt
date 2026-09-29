@@ -132,6 +132,15 @@ class InterceptDialogActivity : AppCompatActivity() {
 
             // Start session in SessionManager (which automatically schedules proactive timer!)
             SessionManager.startSession(targetPackage, goal, durationMinutes)
+
+            // 写入本地使用与自律记录
+            com.shawn.stopscroll.data.RecordManager.addRecord(
+                packageName = targetPackage,
+                appName = getAppName(targetPackage),
+                userGoal = goal,
+                durationMinutes = durationMinutes
+            )
+
             Toast.makeText(this, "🎯 目标已设定：$goal ($durationDesc)，AI已开始守护！", Toast.LENGTH_SHORT).show()
 
             // Launch the target app

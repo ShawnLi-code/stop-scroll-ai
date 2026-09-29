@@ -34,33 +34,32 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release_output
-          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.5.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.6.apk
           ls -lh release_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StopScrollAI-v1.0.5-APK
-          path: release_output/StopScrollAI-v1.0.5.apk
+          name: StopScrollAI-v1.0.6-APK
+          path: release_output/StopScrollAI-v1.0.6.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.5
-          name: StopScroll AI v1.0.5 (120Hz高刷零掉帧 + 自定义时长/1小时 + 23点夜间宵禁)
+          tag_name: v1.0.6
+          name: StopScroll AI v1.0.6 (使用历史与自律统计看板 + 按日按月汇总 + 单次明细记录)
           body: |
-            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.5
+            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.6
             
             #### 核心重磅升级：
-            1. **彻底解决 120Hz 高刷屏掉帧/卡顿问题 (针对 OPPO Find X9 / ColorOS 优化)**：
-               - 精简无障碍底层事件监听，剔除 `typeWindowContentChanged` 与不必要视图遍历；
-               - 刷短视频时 0 额外系统开销，120Hz 全程如丝般顺滑，彻底告别手机掉帧！
-            2. **自由设置单次专注时长（支持设置 1 小时 / 60 分钟及任意时长）**：
-               - APP 设置页新增「⏱️ 单次使用时长设置」卡片，支持自由预设常用时长；
-               - 拦截弹窗新增 30分钟、60分钟（1小时）快捷按钮及自定义分钟输入框；
-            3. **🌙 夜间防沉迷宵禁模式（晚上 11 点后严禁打开短视频）**：
-               - 支持开启/关闭夜间作息保护，默认生效时段为 23:00 至次日 06:00（可点击自由修改时分）；
-               - 在宵禁时段内只要试图打开短视频，直接弹出全屏作息提醒并强制退回桌面，绝不允许进入！
-          files: release_output/StopScrollAI-v1.0.5.apk
+            1. **📊 每次打开短视频明细记录 (本地 SQLite 存储)**：
+               - 每次带着目标进入应用时，自动记录应用名称、声明目标、选定使用时长和具体时间；
+            2. **📈 按日与按月使用时长总汇总看板**：
+               - 当日累计受控用时统计（如：X 小时 Y 分钟）与打开次数；
+               - 全月累计时长与总次数聚合；
+               - 主界面置顶显示「📊 今日自律战报」，一目了然；
+            3. **📅 日历与日期自由筛选**：
+               - 提供日历日期选择器（可查询以往任意一天的使用记录）与「今天 / 昨天 / 前天」快捷按钮。
+          files: release_output/StopScrollAI-v1.0.6.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

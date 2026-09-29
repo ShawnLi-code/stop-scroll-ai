@@ -49,6 +49,12 @@
             android:launchMode="singleInstance"
             android:theme="@style/Theme.StopScroll.Dialog" />
 
+        <!-- 使用历史与统计看板 Activity -->
+        <activity
+            android:name=".HistoryActivity"
+            android:excludeFromRecents="true"
+            android:exported="true" />
+
         <!-- 核心无障碍监控服务 -->
         <service
             android:name=".service.StopScrollAccessibilityService"

@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
         updatePermissionStatuses()
         updateMonitoredSummary()
         updateCurfewDisplay()
+        updateTodayUsageDashboard()
     }
 
     override fun onPause() {
@@ -47,6 +48,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
+        // 0. Today Usage Dashboard
+        updateTodayUsageDashboard()
+
         // 1. Curfew Views
         binding.switchCurfew.isChecked = PrefManager.curfewEnabled
         updateCurfewDisplay()
@@ -226,6 +230,11 @@ class MainActivity : AppCompatActivity() {
             saveAllConfig()
             Toast.makeText(this, "💾 全部自律配置与应用监控已成功生效！", Toast.LENGTH_SHORT).show()
         }
+
+        // History Activity jump
+        binding.btnOpenHistory.setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
+        }
     }
 
     private fun updateCurfewDisplay() {
@@ -241,6 +250,14 @@ class MainActivity : AppCompatActivity() {
             binding.tvCurfewSummary.text = "当前已停用夜间宵禁"
             binding.tvCurfewSummary.setTextColor(getColor(R.color.text_muted))
         }
+    }
+
+    private fun updateTodayUsageDashboard() {
+        val today = com.shawn.stopscroll.data.RecordManager.getTodayDateString()
+        binding.tvMainTodayDate.text = today
+        val summary = com.shawn.stopscroll.data.RecordManager.getTodaySummary()
+        binding.tvMainTodayDuration.text = summary.formattedDuration
+        binding.tvMainTodayCount.text = "${summary.count} 次"
     }
 
     private fun setupCheckboxListener(cb: CheckBox, pkg: String, name: String) {
