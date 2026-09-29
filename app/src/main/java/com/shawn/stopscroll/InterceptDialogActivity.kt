@@ -74,6 +74,33 @@ class InterceptDialogActivity : AppCompatActivity() {
         val appName = getAppName(targetPackage)
         binding.tvTargetAppInfo.text = "检测到你正在打开：$appName"
 
+        // 加载默认时长配置
+        val defaultMin = com.shawn.stopscroll.data.PrefManager.defaultDurationMinutes
+        when (defaultMin) {
+            3 -> binding.chip3.isChecked = true
+            5 -> binding.chip5.isChecked = true
+            15 -> binding.chip15.isChecked = true
+            30 -> binding.chip30.isChecked = true
+            60 -> binding.chip60.isChecked = true
+            else -> {
+                binding.chipGroupDuration.clearCheck()
+                binding.etCustomMinutes.setText(defaultMin.toString())
+            }
+        }
+
+        binding.chipGroupDuration.setOnCheckedChangeListener { _, checkedId ->
+            if (checkedId != View.NO_ID && binding.etCustomMinutes.hasFocus()) {
+                binding.etCustomMinutes.text.clear()
+                binding.etCustomMinutes.clearFocus()
+            }
+        }
+
+        binding.etCustomMinutes.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                binding.chipGroupDuration.clearCheck()
+            }
+        }
+
         binding.btnEnterApp.setOnClickListener {
             val goal = binding.etUserGoal.text.toString().trim()
             if (goal.isEmpty()) {
@@ -81,17 +108,31 @@ class InterceptDialogActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            var durationMinutes = 3
-            when (binding.chipGroupDuration.checkedChipId) {
-                R.id.chip3 -> durationMinutes = 3
-                R.id.chip5 -> durationMinutes = 5
-                R.id.chip10 -> durationMinutes = 10
-                R.id.chip15 -> durationMinutes = 15
+            val customText = binding.etCustomMinutes.text.toString().trim()
+            val customVal = customText.toIntOrNull()
+
+            val durationMinutes = if (customVal != null && customVal > 0) {
+                customVal
+            } else {
+                when (binding.chipGroupDuration.checkedChipId) {
+                    R.id.chip3 -> 3
+                    R.id.chip5 -> 5
+                    R.id.chip15 -> 15
+                    R.id.chip30 -> 30
+                    R.id.chip60 -> 60
+                    else -> 15
+                }
+            }
+
+            val durationDesc = if (durationMinutes >= 60 && durationMinutes % 60 == 0) {
+                "${durationMinutes / 60}小时"
+            } else {
+                "${durationMinutes}分钟"
             }
 
             // Start session in SessionManager (which automatically schedules proactive timer!)
             SessionManager.startSession(targetPackage, goal, durationMinutes)
-            Toast.makeText(this, "🎯 目标已设定：$goal (${durationMinutes}分钟)，AI已开始守护！", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "🎯 目标已设定：$goal ($durationDesc)，AI已开始守护！", Toast.LENGTH_SHORT).show()
 
             // Launch the target app
             val launchIntent = packageManager.getLaunchIntentForPackage(targetPackage)

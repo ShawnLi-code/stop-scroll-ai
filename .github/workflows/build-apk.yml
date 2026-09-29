@@ -34,33 +34,33 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release_output
-          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.4.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.5.apk
           ls -lh release_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StopScrollAI-v1.0.4-APK
-          path: release_output/StopScrollAI-v1.0.4.apk
+          name: StopScrollAI-v1.0.5-APK
+          path: release_output/StopScrollAI-v1.0.5.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.4
-          name: StopScroll AI v1.0.4 (刚性主动倒计时打断 + 防手滑划掉保护)
+          tag_name: v1.0.5
+          name: StopScroll AI v1.0.5 (120Hz高刷零掉帧 + 自定义时长/1小时 + 23点夜间宵禁)
           body: |
-            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.4
+            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.5
             
             #### 核心重磅升级：
-            1. **刚性主动倒计时打断（不配置 AI 也 100% 准时生效）**：
-               - 移除了过去依赖屏幕触摸的被动检测机制，改用系统级 Handler 主动定时器；
-               - 无论在刷什么视频，时间一到毫秒级主动强震动 + 弹出全屏「⏰ 专注时间已到！」红色卡片，当场打断，绝不错过；
-            2. **防手滑误划掉杀后台机制**：
-               - 主界面设置 `excludeFromRecents="true"`，不出现在最近多任务列表中，想误划都划不掉！
-               - 保护无障碍服务不被误杀断连；
-            3. **全新的即勾即存反馈与监控看板**：
-               - 勾选应用即刻提示生效；
-               - 增加「🎯 当前已受控应用列表」状态看板与底部全局保存大按钮。
-          files: release_output/StopScrollAI-v1.0.4.apk
+            1. **彻底解决 120Hz 高刷屏掉帧/卡顿问题 (针对 OPPO Find X9 / ColorOS 优化)**：
+               - 精简无障碍底层事件监听，剔除 `typeWindowContentChanged` 与不必要视图遍历；
+               - 刷短视频时 0 额外系统开销，120Hz 全程如丝般顺滑，彻底告别手机掉帧！
+            2. **自由设置单次专注时长（支持设置 1 小时 / 60 分钟及任意时长）**：
+               - APP 设置页新增「⏱️ 单次使用时长设置」卡片，支持自由预设常用时长；
+               - 拦截弹窗新增 30分钟、60分钟（1小时）快捷按钮及自定义分钟输入框；
+            3. **🌙 夜间防沉迷宵禁模式（晚上 11 点后严禁打开短视频）**：
+               - 支持开启/关闭夜间作息保护，默认生效时段为 23:00 至次日 06:00（可点击自由修改时分）；
+               - 在宵禁时段内只要试图打开短视频，直接弹出全屏作息提醒并强制退回桌面，绝不允许进入！
+          files: release_output/StopScrollAI-v1.0.5.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

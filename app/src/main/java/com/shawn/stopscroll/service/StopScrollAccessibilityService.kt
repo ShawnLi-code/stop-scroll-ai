@@ -19,7 +19,9 @@ import com.shawn.stopscroll.data.PrefManager
 import com.shawn.stopscroll.data.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class StopScrollAccessibilityService : AccessibilityService() {
@@ -27,6 +29,7 @@ class StopScrollAccessibilityService : AccessibilityService() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val mainHandler = Handler(Looper.getMainLooper())
     private var lastInterceptTime = 0L
+    private var aiMonitoringJob: Job? = null
 
     // 刚性主动倒计时任务
     private val timeoutRunnable = Runnable {
@@ -38,12 +41,13 @@ class StopScrollAccessibilityService : AccessibilityService() {
         instance = this
         Log.i("StopScroll", "AccessibilityService connected successfully!")
 
-        // 注册主动倒计时回调
+        // 注册主动倒计时与监听回调
         SessionManager.onSessionStartedCallback = { pkg, goal, minutes ->
             scheduleActiveTimer(pkg, goal, minutes)
         }
         SessionManager.onSessionEndedCallback = {
             mainHandler.removeCallbacks(timeoutRunnable)
+            aiMonitoringJob?.cancel()
         }
 
         showToast("【别刷了 AI】守护服务已激活！")
@@ -55,6 +59,7 @@ class StopScrollAccessibilityService : AccessibilityService() {
             instance = null
         }
         mainHandler.removeCallbacks(timeoutRunnable)
+        aiMonitoringJob?.cancel()
     }
 
     /**
@@ -65,9 +70,13 @@ class StopScrollAccessibilityService : AccessibilityService() {
         val delayMillis = durationMinutes * 60 * 1000L
         Log.i("StopScroll", "Scheduled proactive timeout timer for $packageName in $delayMillis ms ($durationMinutes minutes)")
         mainHandler.postDelayed(timeoutRunnable, delayMillis)
+
+        // 启动后台低开销 AI 周期检测（仅当配置了 Key 时每10秒检测一次，无需监听高刷屏幕滚动事件）
+        startAiMonitor(packageName, userGoal)
     }
 
     private fun handleTimeout() {
+        aiMonitoringJob?.cancel()
         val session = SessionManager.currentSession ?: return
         val pkg = session.packageName
         val goal = session.userGoal
@@ -88,6 +97,56 @@ class StopScrollAccessibilityService : AccessibilityService() {
         )
     }
 
+    private fun startAiMonitor(packageName: String, userGoal: String) {
+        aiMonitoringJob?.cancel()
+        if (PrefManager.apiKey.isBlank()) return
+
+        aiMonitoringJob = serviceScope.launch {
+            // 每隔 10 秒主动采样一次屏幕内容，完全不占用 120Hz 渲染通道
+            while (SessionManager.isSessionActiveFor(packageName)) {
+                delay(10000L)
+                val session = SessionManager.currentSession ?: break
+                if (session.packageName != packageName) break
+
+                try {
+                    val rootNode = rootInActiveWindow ?: continue
+                    val extractedTexts = mutableListOf<String>()
+                    extractTextFromNodes(rootNode, extractedTexts)
+                    val combined = extractedTexts.joinToString(" | ")
+
+                    if (combined.length > 8) {
+                        Log.d("StopScroll", "AI checking screen (${extractedTexts.size} nodes): $combined")
+                        val result = AiService.checkContentRelevance(userGoal, combined)
+                        Log.i("StopScroll", "AI Decision: isOffTarget=${result.isOffTarget}, reason=${result.reason}")
+
+                        if (result.isOffTarget) {
+                            session.consecutiveViolations++
+                            vibrateDevice(300L)
+                            showToast("⚠️ AI 提醒：疑似偏离目标 (${session.consecutiveViolations}/2)\n原因: ${result.reason}")
+
+                            if (session.consecutiveViolations >= 2) {
+                                SessionManager.endSession()
+                                aiMonitoringJob?.cancel()
+                                vibrateDevice(600L)
+                                triggerAlert(
+                                    packageName,
+                                    "🚫 目标偏离！强制中断",
+                                    "你声明的目标是：【$userGoal】\n\nAI检测到你正在浏览：\n${result.reason}\n\n已为你强制中断！",
+                                    "🚫"
+                                )
+                                break
+                            }
+                        } else {
+                            session.consecutiveViolations = 0
+                        }
+                    }
+                } catch (t: Throwable) {
+                    Log.e("StopScroll", "AI monitor tick error: ${t.message}")
+                }
+            }
+        }
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         try {
             if (event == null) return
@@ -104,7 +163,24 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 return
             }
 
-            // 3. 如果当前应用【没有合法 Session】，并且是【窗口打开切换事件】-> 触发意图拦截！
+            // 3. 🌙 检查是否处于夜间防沉迷宵禁时段！如果处于宵禁，直接强阻断，不允许打开！
+            if (PrefManager.isInCurfew()) {
+                val now = System.currentTimeMillis()
+                if (now - lastInterceptTime > 1500L) {
+                    lastInterceptTime = now
+                    Log.i("StopScroll", "🌙 Curfew active! Intercepting $pkgName (${PrefManager.getCurfewTimeDisplay()})")
+                    vibrateDevice(600L)
+                    triggerAlert(
+                        pkgName,
+                        "🌙 夜间防沉迷宵禁！",
+                        "当前已进入夜间作息保护时段（${PrefManager.getCurfewTimeDisplay()}）！\n\n夜深了，为了保护睡眠质量与明日精力，此时间段内禁止打开娱乐短视频应用。\n\n请立刻放下手机，好好休息！",
+                        "🌙"
+                    )
+                }
+                return
+            }
+
+            // 4. 如果当前应用【没有合法 Session】，并且是【窗口打开切换事件】-> 触发意图拦截！
             if (!SessionManager.isSessionActiveFor(pkgName)) {
                 if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                     val now = System.currentTimeMillis()
@@ -118,60 +194,10 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 return
             }
 
-            // 4. 当前处于合法使用 Session 中
-            val session = SessionManager.currentSession ?: return
-            if (session.packageName != pkgName) return
-
-            // 兜底检查超时（正常情况下会被主动定时器先行触发）
+            // 5. 当前处于合法使用 Session 中，兜底检查超时（主要依靠 Handler 主动定时器）
             if (SessionManager.isExpired()) {
                 handleTimeout()
                 return
-            }
-
-            // B. AI 动态屏幕内容监督（仅当配置了 API Key 且节流 10 秒采样）
-            val now = System.currentTimeMillis()
-            if (PrefManager.apiKey.isNotBlank() && now - session.lastAiCheckTime > 10000L && !session.isCheckingAi) {
-                session.lastAiCheckTime = now
-                val rootNode = rootInActiveWindow ?: return
-                val extractedTexts = mutableListOf<String>()
-                extractTextFromNodes(rootNode, extractedTexts)
-
-                val combined = extractedTexts.joinToString(" | ")
-                Log.d("StopScroll", "Screen texts extracted (${extractedTexts.size} items): $combined")
-
-                if (combined.length > 8) {
-                    session.isCheckingAi = true
-                    serviceScope.launch {
-                        try {
-                            val result = AiService.checkContentRelevance(session.userGoal, combined)
-                            Log.i("StopScroll", "AI Decision: isOffTarget=${result.isOffTarget}, reason=${result.reason}")
-
-                            if (result.isOffTarget) {
-                                session.consecutiveViolations++
-                                vibrateDevice(300L)
-                                showToast("⚠️ AI 提醒：疑似偏离目标 (${session.consecutiveViolations}/2)\n原因: ${result.reason}")
-
-                                if (session.consecutiveViolations >= 2) {
-                                    // 连续 2 次采样偏离，强制拉出全屏告警阻断！
-                                    SessionManager.endSession()
-                                    vibrateDevice(600L)
-                                    triggerAlert(
-                                        pkgName,
-                                        "🚫 目标偏离！强制中断",
-                                        "你声明的目标是：【${session.userGoal}】\n\nAI检测到你正在浏览：\n${result.reason}\n\n已为你强制中断！",
-                                        "🚫"
-                                    )
-                                }
-                            } else {
-                                session.consecutiveViolations = 0
-                            }
-                        } catch (t: Throwable) {
-                            Log.e("StopScroll", "AI check error: ${t.message}")
-                        } finally {
-                            session.isCheckingAi = false
-                        }
-                    }
-                }
             }
         } catch (e: Throwable) {
             Log.e("StopScroll", "Error in onAccessibilityEvent: ${e.message}")

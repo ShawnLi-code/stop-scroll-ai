@@ -9,6 +9,13 @@ object PrefManager {
     private const val KEY_BASE_URL = "base_url"
     private const val KEY_MODEL = "model_name"
     private const val KEY_PACKAGES = "monitored_packages"
+    private const val KEY_CURFEW_ENABLED = "curfew_enabled"
+    private const val KEY_CURFEW_START_HOUR = "curfew_start_hour"
+    private const val KEY_CURFEW_START_MIN = "curfew_start_min"
+    private const val KEY_CURFEW_END_HOUR = "curfew_end_hour"
+    private const val KEY_CURFEW_END_MIN = "curfew_end_min"
+    private const val KEY_DEFAULT_DURATION = "default_duration_min"
+    private const val KEY_CUSTOM_DURATIONS = "custom_durations"
 
     private lateinit var prefs: SharedPreferences
 
@@ -41,5 +48,64 @@ object PrefManager {
 
     fun isMonitored(packageName: String): Boolean {
         return monitoredPackages.contains(packageName)
+    }
+
+    // ========== 夜间防沉迷宵禁配置 (默认 23:00 至 06:00 禁止短视频) ==========
+    var curfewEnabled: Boolean
+        get() = prefs.getBoolean(KEY_CURFEW_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_CURFEW_ENABLED, value).apply()
+
+    var curfewStartHour: Int
+        get() = prefs.getInt(KEY_CURFEW_START_HOUR, 23)
+        set(value) = prefs.edit().putInt(KEY_CURFEW_START_HOUR, value).apply()
+
+    var curfewStartMinute: Int
+        get() = prefs.getInt(KEY_CURFEW_START_MIN, 0)
+        set(value) = prefs.edit().putInt(KEY_CURFEW_START_MIN, value).apply()
+
+    var curfewEndHour: Int
+        get() = prefs.getInt(KEY_CURFEW_END_HOUR, 6)
+        set(value) = prefs.edit().putInt(KEY_CURFEW_END_HOUR, value).apply()
+
+    var curfewEndMinute: Int
+        get() = prefs.getInt(KEY_CURFEW_END_MIN, 0)
+        set(value) = prefs.edit().putInt(KEY_CURFEW_END_MIN, value).apply()
+
+    fun getCurfewTimeDisplay(): String {
+        return String.format("%02d:%02d - %02d:%02d", curfewStartHour, curfewStartMinute, curfewEndHour, curfewEndMinute)
+    }
+
+    /**
+     * 判断当前时间是否落在夜间防沉迷宵禁时段内
+     */
+    fun isInCurfew(): Boolean {
+        if (!curfewEnabled) return false
+        val calendar = java.util.Calendar.getInstance()
+        val nowMinutes = calendar.get(java.util.Calendar.HOUR_OF_DAY) * 60 + calendar.get(java.util.Calendar.MINUTE)
+        val startMinutes = curfewStartHour * 60 + curfewStartMinute
+        val endMinutes = curfewEndHour * 60 + curfewEndMinute
+
+        return if (startMinutes <= endMinutes) {
+            nowMinutes in startMinutes until endMinutes
+        } else {
+            // 跨午夜区间（例如 23:00 至 次日 06:00）
+            nowMinutes >= startMinutes || nowMinutes < endMinutes
+        }
+    }
+
+    // ========== 专注时长配置 (支持 1小时/60分钟、自定义等) ==========
+    var defaultDurationMinutes: Int
+        get() = prefs.getInt(KEY_DEFAULT_DURATION, 15)
+        set(value) = prefs.edit().putInt(KEY_DEFAULT_DURATION, value).apply()
+
+    var customDurations: String
+        get() = prefs.getString(KEY_CUSTOM_DURATIONS, "3, 5, 15, 30, 60") ?: "3, 5, 15, 30, 60"
+        set(value) = prefs.edit().putString(KEY_CUSTOM_DURATIONS, value).apply()
+
+    fun getDurationOptions(): List<Int> {
+        val list = customDurations.split(",")
+            .mapNotNull { it.trim().toIntOrNull() }
+            .filter { it > 0 }
+        return if (list.isNotEmpty()) list else listOf(3, 5, 15, 30, 60)
     }
 }

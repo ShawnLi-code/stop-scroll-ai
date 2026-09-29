@@ -9,6 +9,8 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
+import android.app.TimePickerDialog
+import android.view.View
 import android.widget.CheckBox
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -36,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         updatePermissionStatuses()
         updateMonitoredSummary()
+        updateCurfewDisplay()
     }
 
     override fun onPause() {
@@ -44,12 +47,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        // Load AI Config
+        // 1. Curfew Views
+        binding.switchCurfew.isChecked = PrefManager.curfewEnabled
+        updateCurfewDisplay()
+
+        // 2. Duration Views
+        val defaultMin = PrefManager.defaultDurationMinutes
+        when (defaultMin) {
+            3 -> binding.mainChip3.isChecked = true
+            5 -> binding.mainChip5.isChecked = true
+            15 -> binding.mainChip15.isChecked = true
+            30 -> binding.mainChip30.isChecked = true
+            60 -> binding.mainChip60.isChecked = true
+            else -> {
+                binding.chipGroupMainDuration.clearCheck()
+                binding.etMainDefaultMinutes.setText(defaultMin.toString())
+            }
+        }
+
+        // 3. Load AI Config
         binding.etApiKey.setText(PrefManager.apiKey)
         binding.etBaseUrl.setText(PrefManager.baseUrl)
         binding.etModelName.setText(PrefManager.modelName)
 
-        // Load Monitored Packages Checkboxes
+        // 4. Load Monitored Packages Checkboxes
         val monitored = PrefManager.monitoredPackages
         binding.cbXhs.isChecked = monitored.contains("com.xingin.xhs")
         binding.cbDouyin.isChecked = monitored.contains("com.ss.android.ugc.aweme")
@@ -99,6 +120,68 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Curfew Listeners
+        binding.switchCurfew.setOnCheckedChangeListener { _, isChecked ->
+            PrefManager.curfewEnabled = isChecked
+            updateCurfewDisplay()
+            val msg = if (isChecked) "🌙 已开启夜间防沉迷宵禁模式" else "⚪ 已关闭夜间宵禁"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+
+        binding.btnCurfewStart.setOnClickListener {
+            TimePickerDialog(
+                this,
+                { _, hourOfDay, minute ->
+                    PrefManager.curfewStartHour = hourOfDay
+                    PrefManager.curfewStartMinute = minute
+                    updateCurfewDisplay()
+                    Toast.makeText(this, "已将宵禁开始时间更新为 %02d:%02d".format(hourOfDay, minute), Toast.LENGTH_SHORT).show()
+                },
+                PrefManager.curfewStartHour,
+                PrefManager.curfewStartMinute,
+                true
+            ).show()
+        }
+
+        binding.btnCurfewEnd.setOnClickListener {
+            TimePickerDialog(
+                this,
+                { _, hourOfDay, minute ->
+                    PrefManager.curfewEndHour = hourOfDay
+                    PrefManager.curfewEndMinute = minute
+                    updateCurfewDisplay()
+                    Toast.makeText(this, "已将宵禁结束时间更新为 %02d:%02d".format(hourOfDay, minute), Toast.LENGTH_SHORT).show()
+                },
+                PrefManager.curfewEndHour,
+                PrefManager.curfewEndMinute,
+                true
+            ).show()
+        }
+
+        // Duration Listeners
+        binding.chipGroupMainDuration.setOnCheckedChangeListener { _, checkedId ->
+            if (checkedId != View.NO_ID) {
+                binding.etMainDefaultMinutes.text.clear()
+                val min = when (checkedId) {
+                    binding.mainChip3.id -> 3
+                    binding.mainChip5.id -> 5
+                    binding.mainChip15.id -> 15
+                    binding.mainChip30.id -> 30
+                    binding.mainChip60.id -> 60
+                    else -> 15
+                }
+                PrefManager.defaultDurationMinutes = min
+                val desc = if (min == 60) "1小时" else "${min}分钟"
+                Toast.makeText(this, "⏱️ 默认单次时长已设为: $desc", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.etMainDefaultMinutes.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                binding.chipGroupMainDuration.clearCheck()
+            }
+        }
+
         // Test AI Connection
         binding.btnTestAi.setOnClickListener {
             val key = binding.etApiKey.text.toString().trim()
@@ -145,6 +228,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateCurfewDisplay() {
+        val startStr = "%02d:%02d".format(PrefManager.curfewStartHour, PrefManager.curfewStartMinute)
+        val endStr = "%02d:%02d".format(PrefManager.curfewEndHour, PrefManager.curfewEndMinute)
+        binding.btnCurfewStart.text = "开始: $startStr"
+        binding.btnCurfewEnd.text = "结束: $endStr"
+
+        if (PrefManager.curfewEnabled) {
+            binding.tvCurfewSummary.text = "当前生效时段：$startStr 至 $endStr 强制禁止短视频"
+            binding.tvCurfewSummary.setTextColor(getColor(R.color.primary))
+        } else {
+            binding.tvCurfewSummary.text = "当前已停用夜间宵禁"
+            binding.tvCurfewSummary.setTextColor(getColor(R.color.text_muted))
+        }
+    }
+
     private fun setupCheckboxListener(cb: CheckBox, pkg: String, name: String) {
         cb.setOnCheckedChangeListener { _, isChecked ->
             val set = PrefManager.monitoredPackages.toMutableSet()
@@ -180,6 +278,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveAllConfig() {
+        PrefManager.curfewEnabled = binding.switchCurfew.isChecked
+
+        val customMin = binding.etMainDefaultMinutes.text.toString().trim().toIntOrNull()
+        if (customMin != null && customMin > 0) {
+            PrefManager.defaultDurationMinutes = customMin
+        }
+
         PrefManager.apiKey = binding.etApiKey.text.toString().trim()
         PrefManager.baseUrl = binding.etBaseUrl.text.toString().trim()
         PrefManager.modelName = binding.etModelName.text.toString().trim()

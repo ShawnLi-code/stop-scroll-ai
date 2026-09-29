@@ -222,7 +222,101 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- 2. AI Model Settings Card -->
+        <!-- 2. Night Curfew Mode Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2. 🌙 夜间防沉迷宵禁"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCurfewSummary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="当前生效时段：23:00 - 06:00"
+                        android:textColor="@color/primary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchCurfew"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/card_border" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnCurfewStart"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_secondary"
+                    android:text="开始: 23:00"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/btnCurfewEnd"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_secondary"
+                    android:text="结束: 06:00"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="#1510B981"
+                android:lineSpacingMultiplier="1.2"
+                android:padding="10dp"
+                android:text="🔒 宵禁效果：在晚上 11 点 (23:00) 之后打开抖音、快手、小红书等短视频时，将直接全屏弹出作息提示并强制退出，不允许进入！"
+                android:textColor="@color/primary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- 3. Duration Control Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -234,7 +328,208 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2. AI 屏幕内容监护 (选配功能)"
+                android:text="3. ⏱️ 单次使用时长设置"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="设置进入短视频后的默认倒计时时长 (到点即强制踢出)"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
+
+            <!-- Default Duration Selector -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="预设默认时长 (打开拦截弹窗时自动选中)："
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupMainDuration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/mainChip3"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3 分钟" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/mainChip5"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5 分钟" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/mainChip15"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="15 分钟" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/mainChip30"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="30 分钟" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/mainChip60"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="60 分钟 (1小时)" />
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Custom Minutes Input -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="或自定义默认时长 (支持 60 分钟 / 1 小时)："
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etMainDefaultMinutes"
+                    android:layout_width="120dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/edit_text_bg"
+                    android:gravity="center"
+                    android:hint="输入分钟 (如 60)"
+                    android:inputType="number"
+                    android:maxLength="4"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_muted"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="分钟"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 4. Monitored Target Apps -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4. 监控的目标应用"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- Live Status Banner -->
+            <TextView
+                android:id="@+id/tvMonitoredSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="#1510B981"
+                android:padding="10dp"
+                android:text="当前已受控应用：小红书、抖音、Chrome"
+                android:textColor="@color/primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="勾选在打开时需要强制进行意图拦截的应用 (即勾即生效):"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
+
+            <CheckBox
+                android:id="@+id/cbXhs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:checked="true"
+                android:text="小红书 (com.xingin.xhs)"
+                android:textColor="@color/text_primary" />
+
+            <CheckBox
+                android:id="@+id/cbDouyin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="抖音 (com.ss.android.ugc.aweme)"
+                android:textColor="@color/text_primary" />
+
+            <CheckBox
+                android:id="@+id/cbBilibili"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="哔哩哔哩 (tv.danmaku.bili)"
+                android:textColor="@color/text_primary" />
+
+            <CheckBox
+                android:id="@+id/cbKuaishou"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="快手 (com.smile.gifmaker)"
+                android:textColor="@color/text_primary" />
+
+            <CheckBox
+                android:id="@+id/cbWeibo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="微博 (com.sina.weibo)"
+                android:textColor="@color/text_primary" />
+
+            <CheckBox
+                android:id="@+id/cbChrome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chrome 浏览器 (测试专用)"
+                android:textColor="@color/text_primary" />
+        </LinearLayout>
+
+        <!-- 5. AI Model Settings Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="5. AI 屏幕内容监护 (选配功能)"
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -319,91 +614,6 @@
                 android:text="测试 AI 接口连通性"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp" />
-        </LinearLayout>
-
-        <!-- 3. Monitored Target Apps -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/card_rounded"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="3. 监控的目标应用"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <!-- Live Status Banner -->
-            <TextView
-                android:id="@+id/tvMonitoredSummary"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="#1510B981"
-                android:padding="10dp"
-                android:text="当前已受控应用：小红书、抖音、Chrome"
-                android:textColor="@color/primary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="勾选在打开时需要强制进行意图拦截的应用 (即勾即生效):"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
-
-            <CheckBox
-                android:id="@+id/cbXhs"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:checked="true"
-                android:text="小红书 (com.xingin.xhs)"
-                android:textColor="@color/text_primary" />
-
-            <CheckBox
-                android:id="@+id/cbDouyin"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="抖音 (com.ss.android.ugc.aweme)"
-                android:textColor="@color/text_primary" />
-
-            <CheckBox
-                android:id="@+id/cbBilibili"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="哔哩哔哩 (tv.danmaku.bili)"
-                android:textColor="@color/text_primary" />
-
-            <CheckBox
-                android:id="@+id/cbKuaishou"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="快手 (com.smile.gifmaker)"
-                android:textColor="@color/text_primary" />
-
-            <CheckBox
-                android:id="@+id/cbWeibo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="微博 (com.sina.weibo)"
-                android:textColor="@color/text_primary" />
-
-            <CheckBox
-                android:id="@+id/cbChrome"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Chrome 浏览器 (测试专用)"
-                android:textColor="@color/text_primary" />
         </LinearLayout>
 
         <!-- Global Save Button -->
