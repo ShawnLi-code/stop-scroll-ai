@@ -378,7 +378,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkAppUpdate(isManual: Boolean) {
-        val currentVersion = BuildConfig.VERSION_NAME
+        val currentVersion = try {
+            packageManager.getPackageInfo(packageName, 0).versionName ?: "1.0.9"
+        } catch (e: Exception) {
+            "1.0.9"
+        }
         if (isManual) {
             binding.btnCheckUpdate.isEnabled = false
             binding.btnCheckUpdate.text = "检查中..."
