@@ -102,9 +102,9 @@ class StopScrollAccessibilityService : AccessibilityService() {
         if (PrefManager.apiKey.isBlank()) return
 
         aiMonitoringJob = serviceScope.launch {
-            // 每隔 10 秒主动采样一次屏幕内容，完全不占用 120Hz 渲染通道
+            // 每隔 12 秒主动轻量采样一次屏幕文本内容（带Hash去重与本地过滤，完全不占用120Hz渲染通道，不发热）
             while (SessionManager.isSessionActiveFor(packageName)) {
-                delay(10000L)
+                delay(12000L)
                 val session = SessionManager.currentSession ?: break
                 if (session.packageName != packageName) break
 

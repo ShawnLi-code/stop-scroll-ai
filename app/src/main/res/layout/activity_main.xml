@@ -646,6 +646,64 @@
                 android:textColor="@color/text_muted"
                 android:textSize="12sp" />
 
+            <!-- Free Models Presets -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="🎁 免费模型一键配置 (点击快速填入)："
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupAiPresets"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPresetZhipu"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🌟 智谱 GLM-4-Flash (国内永久免费·推荐)" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPresetSilicon"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚡ 硅基流动 Qwen2.5 (免费专区)" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPresetGemini"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🚀 Google Gemini Flash (官方免费)" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPresetDeepseek"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🧠 DeepSeek-V3" />
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Free Model Guide Tip -->
+            <TextView
+                android:id="@+id/tvAiPresetGuide"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="#153B82F6"
+                android:lineSpacingMultiplier="1.2"
+                android:padding="10dp"
+                android:text="💡 推荐方案：点击【智谱 GLM-4-Flash】永久免费！\n国内直连无需梯子，延迟仅200ms。微信扫码登录 open.bigmodel.cn 复制免费 API Key 粘贴即可，0元无费用。"
+                android:textColor="#93C5FD"
+                android:textSize="12sp" />
+
             <!-- API Key -->
             <TextView
                 android:layout_width="wrap_content"

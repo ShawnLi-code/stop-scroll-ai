@@ -12,7 +12,9 @@ import android.view.accessibility.AccessibilityManager
 import android.app.TimePickerDialog
 import android.view.View
 import android.widget.CheckBox
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.shawn.stopscroll.ai.AiService
@@ -24,6 +26,7 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private var isProgrammaticCheckChange = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -124,12 +127,45 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Curfew Listeners
+        // Curfew Listeners with Anti-Relapse Night Lock
         binding.switchCurfew.setOnCheckedChangeListener { _, isChecked ->
-            PrefManager.curfewEnabled = isChecked
-            updateCurfewDisplay()
-            val msg = if (isChecked) "🌙 已开启夜间防沉迷宵禁模式" else "⚪ 已关闭夜间宵禁"
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+            if (isProgrammaticCheckChange) return@setOnCheckedChangeListener
+
+            if (isChecked) {
+                PrefManager.curfewEnabled = true
+                updateCurfewDisplay()
+                Toast.makeText(this, "🌙 已开启夜间防沉迷宵禁模式", Toast.LENGTH_SHORT).show()
+            } else {
+                // 用户试图关闭宵禁
+                // 1. 夜间宵禁时段内：刚性绝对锁定，禁止关闭！
+                if (PrefManager.isInCurfew()) {
+                    isProgrammaticCheckChange = true
+                    binding.switchCurfew.isChecked = true
+                    isProgrammaticCheckChange = false
+
+                    AlertDialog.Builder(this)
+                        .setTitle("🌙 夜间防沉迷作息锁定中")
+                        .setMessage("现在正是夜间作息保护时段（${PrefManager.getCurfewTimeDisplay()}）！\n\n昨晚就是因为解除限制导致刷到了凌晨1点！为了坚守自律底线，夜间时段内严禁关闭宵禁！\n\n请立刻放下手机，保持健康睡眠！")
+                        .setPositiveButton("坚守底线，去睡觉", null)
+                        .show()
+                    return@setOnCheckedChangeListener
+                }
+
+                // 2. 白天时段：需通过 AI 解除理由审核
+                showUnlockReasonDialog(
+                    actionTitle = "关闭夜间防沉迷宵禁",
+                    onApproved = {
+                        PrefManager.curfewEnabled = false
+                        updateCurfewDisplay()
+                        Toast.makeText(this, "⚪ 已关闭夜间宵禁", Toast.LENGTH_SHORT).show()
+                    },
+                    onRejected = {
+                        isProgrammaticCheckChange = true
+                        binding.switchCurfew.isChecked = true
+                        isProgrammaticCheckChange = false
+                    }
+                )
+            }
         }
 
         binding.btnCurfewStart.setOnClickListener {
@@ -184,6 +220,35 @@ class MainActivity : AppCompatActivity() {
             if (hasFocus) {
                 binding.chipGroupMainDuration.clearCheck()
             }
+        }
+
+        // 🎁 免费模型一键预设监听
+        binding.chipPresetZhipu.setOnClickListener {
+            binding.etBaseUrl.setText("https://open.bigmodel.cn/api/paas/v4")
+            binding.etModelName.setText("glm-4-flash")
+            binding.tvAiPresetGuide.text = "🌟 已选【智谱 GLM-4-Flash】永久免费！\n国内直连无需梯子，速度极快（200ms）。请前往 open.bigmodel.cn 手机号登录，在 API Keys 复制免费 Key 填入上方。"
+            Toast.makeText(this, "🌟 已载入智谱 GLM-4-Flash (国内永久免费)", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.chipPresetSilicon.setOnClickListener {
+            binding.etBaseUrl.setText("https://api.siliconflow.cn/v1")
+            binding.etModelName.setText("Qwen/Qwen2.5-7B-Instruct")
+            binding.tvAiPresetGuide.text = "⚡ 已选【硅基流动 Qwen2.5】免费专区！\n国内直连，请在 siliconflow.cn 免费获取 API Key 填入上方即可使用。"
+            Toast.makeText(this, "⚡ 已载入硅基流动 Qwen2.5 免费模型", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.chipPresetGemini.setOnClickListener {
+            binding.etBaseUrl.setText("https://generativelanguage.googleapis.com/v1beta/openai")
+            binding.etModelName.setText("gemini-1.5-flash")
+            binding.tvAiPresetGuide.text = "🚀 已选【Google Gemini 1.5 Flash】官方免费！\n自带每天1500次免费额度。请填入 Google AI Studio 获取的 API Key。"
+            Toast.makeText(this, "🚀 已载入 Google Gemini 官方免费配置", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.chipPresetDeepseek.setOnClickListener {
+            binding.etBaseUrl.setText("https://api.deepseek.com/v1")
+            binding.etModelName.setText("deepseek-chat")
+            binding.tvAiPresetGuide.text = "🧠 已选【DeepSeek-V3】官方配置。\n请填入你在 platform.deepseek.com 申请的 API Key。"
+            Toast.makeText(this, "🧠 已载入 DeepSeek 官方配置", Toast.LENGTH_SHORT).show()
         }
 
         // Test AI Connection
@@ -262,16 +327,101 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupCheckboxListener(cb: CheckBox, pkg: String, name: String) {
         cb.setOnCheckedChangeListener { _, isChecked ->
-            val set = PrefManager.monitoredPackages.toMutableSet()
+            if (isProgrammaticCheckChange) return@setOnCheckedChangeListener
+
             if (isChecked) {
+                val set = PrefManager.monitoredPackages.toMutableSet()
                 set.add(pkg)
+                PrefManager.monitoredPackages = set
+                updateMonitoredSummary()
                 Toast.makeText(this, "✅ 已开启【$name】自律拦截", Toast.LENGTH_SHORT).show()
             } else {
-                set.remove(pkg)
-                Toast.makeText(this, "⚪ 已解除【$name】监控", Toast.LENGTH_SHORT).show()
+                // 用户试图解除对某应用的监控
+                // 1. 夜间宵禁时段：严禁解除！
+                if (PrefManager.isInCurfew()) {
+                    isProgrammaticCheckChange = true
+                    cb.isChecked = true
+                    isProgrammaticCheckChange = false
+
+                    AlertDialog.Builder(this)
+                        .setTitle("🌙 夜间防沉迷作息锁定中")
+                        .setMessage("当前处于夜间作息保护时段（${PrefManager.getCurfewTimeDisplay()}）！\n\n昨晚就是因为深夜解除限制刷到了凌晨1点！为了杜绝重蹈覆辙，夜间时段内严禁解除任何受控应用！\n\n请放下手机，早点入睡！")
+                        .setPositiveButton("坚守底线，去睡觉", null)
+                        .show()
+                    return@setOnCheckedChangeListener
+                }
+
+                // 2. 白天正常时段：提交 AI 审核理由
+                showUnlockReasonDialog(
+                    actionTitle = "解除对【$name】的自律监控",
+                    onApproved = {
+                        val set = PrefManager.monitoredPackages.toMutableSet()
+                        set.remove(pkg)
+                        PrefManager.monitoredPackages = set
+                        updateMonitoredSummary()
+                        Toast.makeText(this, "⚪ 已解除【$name】监控", Toast.LENGTH_SHORT).show()
+                    },
+                    onRejected = {
+                        isProgrammaticCheckChange = true
+                        cb.isChecked = true
+                        isProgrammaticCheckChange = false
+                    }
+                )
             }
-            PrefManager.monitoredPackages = set
-            updateMonitoredSummary()
+        }
+    }
+
+    private fun showUnlockReasonDialog(actionTitle: String, onApproved: () -> Unit, onRejected: () -> Unit) {
+        val input = EditText(this).apply {
+            hint = "请向 AI 说明必须解除限制的紧急/工作事由"
+            setPadding(40, 30, 40, 30)
+            textSize = 14f
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("🛡️ 自律保护：解除限制理由审核")
+            .setMessage("你正在尝试【$actionTitle】。\n为了防止一时冲动导致沉迷破戒，请向 AI 阐述你必须解除限制的正当理由：")
+            .setView(input)
+            .setCancelable(false)
+            .setPositiveButton("🤖 提交 AI 审查", null)
+            .setNegativeButton("取消，保持自律") { d, _ ->
+                d.dismiss()
+                onRejected()
+            }
+            .create()
+
+        dialog.show()
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val reason = input.text.toString().trim()
+            if (reason.isEmpty()) {
+                Toast.makeText(this, "请输入具体的正当事由！", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            input.isEnabled = false
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).text = "AI 审核中..."
+
+            lifecycleScope.launch {
+                val result = AiService.auditUnlockReason(actionTitle, reason)
+                if (result.passed) {
+                    Toast.makeText(this@MainActivity, "✅ AI 审核通过：已准许解除限制", Toast.LENGTH_LONG).show()
+                    dialog.dismiss()
+                    onApproved()
+                } else {
+                    input.isEnabled = true
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).text = "重新提交"
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("🚫 AI 驳回解除申请！")
+                        .setMessage("AI 评语：\n${result.feedback}\n\n已为你维持自律监控开启状态！")
+                        .setPositiveButton("保持自律", null)
+                        .show()
+                    dialog.dismiss()
+                    onRejected()
+                }
+            }
         }
     }
 

@@ -1,12 +1,19 @@
 package com.shawn.stopscroll
 
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.shawn.stopscroll.data.SessionManager
 import com.shawn.stopscroll.databinding.ActivityInterceptBinding
+import kotlinx.coroutines.launch
 
 class InterceptDialogActivity : AppCompatActivity() {
 
@@ -108,49 +115,73 @@ class InterceptDialogActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val customText = binding.etCustomMinutes.text.toString().trim()
-            val customVal = customText.toIntOrNull()
+            // 先隐藏上一次的打回提示
+            binding.layoutGoalReject.visibility = View.GONE
+            binding.btnEnterApp.isEnabled = false
+            binding.btnEnterApp.text = "🤖 AI 自律教练审查中..."
 
-            val durationMinutes = if (customVal != null && customVal > 0) {
-                customVal
-            } else {
-                when (binding.chipGroupDuration.checkedChipId) {
-                    R.id.chip3 -> 3
-                    R.id.chip5 -> 5
-                    R.id.chip15 -> 15
-                    R.id.chip30 -> 30
-                    R.id.chip60 -> 60
-                    else -> 15
+            lifecycleScope.launch {
+                val appName = getAppName(targetPackage)
+                val auditResult = com.shawn.stopscroll.ai.AiService.auditGoalReason(appName, goal)
+
+                if (!auditResult.passed) {
+                    // ❌ 审核未通过：坚决打回！禁止进入！
+                    binding.btnEnterApp.isEnabled = true
+                    binding.btnEnterApp.text = "✅ 重新提交正当目标"
+                    binding.layoutGoalReject.visibility = View.VISIBLE
+                    binding.tvGoalRejectReason.text = auditResult.feedback
+
+                    // 警告震动
+                    vibrateWarning()
+                    Toast.makeText(this@InterceptDialogActivity, "🚫 目标理由已被打回！请看提示重新输入", Toast.LENGTH_LONG).show()
+                    return@launch
                 }
+
+                // ✅ 审核通过：放行进入目标应用
+                val customText = binding.etCustomMinutes.text.toString().trim()
+                val customVal = customText.toIntOrNull()
+
+                val durationMinutes = if (customVal != null && customVal > 0) {
+                    customVal
+                } else {
+                    when (binding.chipGroupDuration.checkedChipId) {
+                        R.id.chip3 -> 3
+                        R.id.chip5 -> 5
+                        R.id.chip15 -> 15
+                        R.id.chip30 -> 30
+                        R.id.chip60 -> 60
+                        else -> 15
+                    }
+                }
+
+                val durationDesc = if (durationMinutes >= 60 && durationMinutes % 60 == 0) {
+                    "${durationMinutes / 60}小时"
+                } else {
+                    "${durationMinutes}分钟"
+                }
+
+                // Start session in SessionManager (which automatically schedules proactive timer!)
+                SessionManager.startSession(targetPackage, goal, durationMinutes)
+
+                // 写入本地使用与自律记录
+                com.shawn.stopscroll.data.RecordManager.addRecord(
+                    packageName = targetPackage,
+                    appName = appName,
+                    userGoal = goal,
+                    durationMinutes = durationMinutes
+                )
+
+                Toast.makeText(this@InterceptDialogActivity, "${auditResult.feedback} ($durationDesc)", Toast.LENGTH_SHORT).show()
+
+                // Launch the target app
+                val launchIntent = packageManager.getLaunchIntentForPackage(targetPackage)
+                if (launchIntent != null) {
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    startActivity(launchIntent)
+                }
+
+                finish()
             }
-
-            val durationDesc = if (durationMinutes >= 60 && durationMinutes % 60 == 0) {
-                "${durationMinutes / 60}小时"
-            } else {
-                "${durationMinutes}分钟"
-            }
-
-            // Start session in SessionManager (which automatically schedules proactive timer!)
-            SessionManager.startSession(targetPackage, goal, durationMinutes)
-
-            // 写入本地使用与自律记录
-            com.shawn.stopscroll.data.RecordManager.addRecord(
-                packageName = targetPackage,
-                appName = getAppName(targetPackage),
-                userGoal = goal,
-                durationMinutes = durationMinutes
-            )
-
-            Toast.makeText(this, "🎯 目标已设定：$goal ($durationDesc)，AI已开始守护！", Toast.LENGTH_SHORT).show()
-
-            // Launch the target app
-            val launchIntent = packageManager.getLaunchIntentForPackage(targetPackage)
-            if (launchIntent != null) {
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                startActivity(launchIntent)
-            }
-
-            finish()
         }
 
         binding.btnGiveUp.setOnClickListener {
@@ -166,6 +197,25 @@ class InterceptDialogActivity : AppCompatActivity() {
         }
         startActivity(homeIntent)
         finish()
+    }
+
+    private fun vibrateWarning() {
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator?.vibrate(VibrationEffect.createOneShot(450L, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(450L)
+            }
+        } catch (e: Exception) {
+            // ignore
+        }
     }
 
     private fun getAppName(pkg: String): String {

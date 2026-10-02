@@ -88,6 +88,36 @@
             android:textSize="14sp"
             android:singleLine="true" />
 
+        <!-- AI Goal Reject Alert Banner -->
+        <LinearLayout
+            android:id="@+id/layoutGoalReject"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="#20EF4444"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🚫 AI 自律教练已打回该理由："
+                android:textColor="#EF4444"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvGoalRejectReason"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:lineSpacingMultiplier="1.2"
+                android:text="理由过于敷衍，未说明具体事项，请重新输入！"
+                android:textColor="#FCA5A5"
+                android:textSize="12sp" />
+        </LinearLayout>
+
         <!-- Duration Selection -->
         <TextView
             android:layout_width="wrap_content"
@@ -188,7 +218,7 @@
             android:layout_marginTop="12dp"
             android:background="#1510B981"
             android:padding="10dp"
-            android:text="🛡️ AI将在后台守护屏幕。若连续检测到与预定目标无关的内容，将立即强制中断！"
+            android:text="🛡️ AI自律教练将严格审核目标理由（拒绝敷衍消遣）。通过后在后台静默守护，偏离目标立即中断！"
             android:textColor="@color/primary"
             android:textSize="12sp" />
 

@@ -34,32 +34,37 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release_output
-          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.6.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.7.apk
           ls -lh release_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StopScrollAI-v1.0.6-APK
-          path: release_output/StopScrollAI-v1.0.6.apk
+          name: StopScrollAI-v1.0.7-APK
+          path: release_output/StopScrollAI-v1.0.7.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.6
-          name: StopScroll AI v1.0.6 (使用历史与自律统计看板 + 按日按月汇总 + 单次明细记录)
+          tag_name: v1.0.7
+          name: StopScroll AI v1.0.7 (AI进入理由严厉审查 + 夜间宵禁防破戒刚性锁 + 智谱GLM永久免费预设)
           body: |
-            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.6
+            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.7 重大自律升级
             
             #### 核心重磅升级：
-            1. **📊 每次打开短视频明细记录 (本地 SQLite 存储)**：
-               - 每次带着目标进入应用时，自动记录应用名称、声明目标、选定使用时长和具体时间；
-            2. **📈 按日与按月使用时长总汇总看板**：
-               - 当日累计受控用时统计（如：X 小时 Y 分钟）与打开次数；
-               - 全月累计时长与总次数聚合；
-               - 主界面置顶显示「📊 今日自律战报」，一目了然；
-            3. **📅 日历与日期自由筛选**：
-               - 提供日历日期选择器（可查询以往任意一天的使用记录）与「今天 / 昨天 / 前天」快捷按钮。
-          files: release_output/StopScrollAI-v1.0.6.apk
+            1. **🤖 AI 打开理由严格审核打回 (告别随便输单字)**：
+               - 每次进入受控应用时，由 AI 自律教练严格评估目标理由；
+               - 坚决打回单字、无意义乱码、模糊敷衍借口（如“随便看看”、“无聊”、“看视频”）以及纯娱乐沉迷借口（如“看美女”、“刷段子”）；
+               - 只有具体正当的学习、工作与实用生活目的才准予进入！
+            2. **🌙 夜间宵禁防破戒刚性安全锁 (彻底杜绝深夜刷到凌晨1点)**：
+               - 在夜间作息保护时段（23:00 - 06:00），系统处于刚性闭锁状态，禁止关闭宵禁，禁止解除任何受控应用！
+               - 白天时段若要解除限制，必须通过 AI 防破戒理由审查，杜绝冲动沉迷。
+            3. **🎁 国内永久免费 AI 大模型一键预设 (智谱 GLM-4-Flash / 硅基流动)**：
+               - 一键填入【智谱 GLM-4-Flash】永久免费配置，国内高速直连无需梯子，延迟仅200ms，0元无费用；
+               - 内置本地智能离线自律审核引擎，不配 Key 也能严厉打回敷衍借口。
+            4. **❄️ 屏幕监护防发热与超低功耗引擎**：
+               - 纯轻量级无障碍文字提取（0 截屏、0 GPU、0 图像编码）；
+               - 屏幕文本 Hash 差分去重 + 本地目标相关词快速放行，不滑动不耗电，手机彻底告别发烫。
+          files: release_output/StopScrollAI-v1.0.7.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
