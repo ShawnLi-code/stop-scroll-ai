@@ -77,13 +77,16 @@ class MainActivity : AppCompatActivity() {
         binding.etBaseUrl.setText(PrefManager.baseUrl)
         binding.etModelName.setText(PrefManager.modelName)
 
-        // 4. Load Monitored Packages Checkboxes
+        // 4. Load Monitored Packages and WeChat Sub-features Checkboxes
+        binding.cbWechatFinder.isChecked = PrefManager.wechatFinderEnabled
+        binding.cbWechatMoments.isChecked = PrefManager.wechatMomentsEnabled
         val monitored = PrefManager.monitoredPackages
         binding.cbXhs.isChecked = monitored.contains("com.xingin.xhs")
         binding.cbDouyin.isChecked = monitored.contains("com.ss.android.ugc.aweme")
         binding.cbBilibili.isChecked = monitored.contains("tv.danmaku.bili")
         binding.cbKuaishou.isChecked = monitored.contains("com.smile.gifmaker")
         binding.cbWeibo.isChecked = monitored.contains("com.sina.weibo")
+        binding.cbTwitter.isChecked = monitored.contains("com.twitter.android")
         binding.cbChrome.isChecked = monitored.contains("com.android.chrome")
 
         updateMonitoredSummary()
@@ -282,13 +285,80 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // WeChat Sub-features Listeners
+        binding.cbWechatFinder.setOnCheckedChangeListener { _, isChecked ->
+            if (isProgrammaticCheckChange) return@setOnCheckedChangeListener
+            if (isChecked) {
+                PrefManager.wechatFinderEnabled = true
+                updateMonitoredSummary()
+                Toast.makeText(this, "✅ 已开启【微信视频号】自律拦截", Toast.LENGTH_SHORT).show()
+            } else {
+                if (PrefManager.isInCurfew()) {
+                    isProgrammaticCheckChange = true
+                    binding.cbWechatFinder.isChecked = true
+                    isProgrammaticCheckChange = false
+                    showNightLockCurfewDialog()
+                    return@setOnCheckedChangeListener
+                }
+                showUnlockReasonDialog(
+                    actionTitle = "解除对【微信视频号】的自律监控",
+                    onApproved = {
+                        PrefManager.wechatFinderEnabled = false
+                        updateMonitoredSummary()
+                        Toast.makeText(this, "⚪ 已解除【微信视频号】监控", Toast.LENGTH_SHORT).show()
+                    },
+                    onRejected = {
+                        isProgrammaticCheckChange = true
+                        binding.cbWechatFinder.isChecked = true
+                        isProgrammaticCheckChange = false
+                    }
+                )
+            }
+        }
+
+        binding.cbWechatMoments.setOnCheckedChangeListener { _, isChecked ->
+            if (isProgrammaticCheckChange) return@setOnCheckedChangeListener
+            if (isChecked) {
+                PrefManager.wechatMomentsEnabled = true
+                updateMonitoredSummary()
+                Toast.makeText(this, "✅ 已开启【微信朋友圈】自律拦截", Toast.LENGTH_SHORT).show()
+            } else {
+                if (PrefManager.isInCurfew()) {
+                    isProgrammaticCheckChange = true
+                    binding.cbWechatMoments.isChecked = true
+                    isProgrammaticCheckChange = false
+                    showNightLockCurfewDialog()
+                    return@setOnCheckedChangeListener
+                }
+                showUnlockReasonDialog(
+                    actionTitle = "解除对【微信朋友圈】的自律监控",
+                    onApproved = {
+                        PrefManager.wechatMomentsEnabled = false
+                        updateMonitoredSummary()
+                        Toast.makeText(this, "⚪ 已解除【微信朋友圈】监控", Toast.LENGTH_SHORT).show()
+                    },
+                    onRejected = {
+                        isProgrammaticCheckChange = true
+                        binding.cbWechatMoments.isChecked = true
+                        isProgrammaticCheckChange = false
+                    }
+                )
+            }
+        }
+
         // Checkbox listeners with instant feedback and save
         setupCheckboxListener(binding.cbXhs, "com.xingin.xhs", "小红书")
         setupCheckboxListener(binding.cbDouyin, "com.ss.android.ugc.aweme", "抖音")
         setupCheckboxListener(binding.cbBilibili, "tv.danmaku.bili", "哔哩哔哩")
         setupCheckboxListener(binding.cbKuaishou, "com.smile.gifmaker", "快手")
         setupCheckboxListener(binding.cbWeibo, "com.sina.weibo", "微博")
+        setupCheckboxListener(binding.cbTwitter, "com.twitter.android", "Twitter (X)")
         setupCheckboxListener(binding.cbChrome, "com.android.chrome", "Chrome 浏览器")
+
+        // Select Custom Apps Button
+        binding.btnSelectCustomApps.setOnClickListener {
+            startActivity(Intent(this, AppPickerActivity::class.java))
+        }
 
         // Global Save Button
         binding.btnSaveAll.setOnClickListener {
@@ -514,24 +584,88 @@ class MainActivity : AppCompatActivity() {
     private fun updateMonitoredSummary() {
         val set = PrefManager.monitoredPackages
         val names = mutableListOf<String>()
+
+        if (PrefManager.wechatFinderEnabled) names.add("微信视频号")
+        if (PrefManager.wechatMomentsEnabled) names.add("微信朋友圈")
+
         if (set.contains("com.xingin.xhs")) names.add("小红书")
         if (set.contains("com.ss.android.ugc.aweme")) names.add("抖音")
         if (set.contains("tv.danmaku.bili")) names.add("B站")
         if (set.contains("com.smile.gifmaker")) names.add("快手")
         if (set.contains("com.sina.weibo")) names.add("微博")
+        if (set.contains("com.twitter.android")) names.add("Twitter(X)")
         if (set.contains("com.android.chrome")) names.add("Chrome")
 
+        val presetSet = setOf(
+            "com.xingin.xhs", "com.ss.android.ugc.aweme", "tv.danmaku.bili",
+            "com.smile.gifmaker", "com.sina.weibo", "com.twitter.android", "com.android.chrome"
+        )
+
+        // 自定义从手机选择的其他应用
+        val customPackages = set.filter { !presetSet.contains(it) }
+        val pm = packageManager
+
+        binding.cgCustomApps.removeAllViews()
+        if (customPackages.isNotEmpty()) {
+            binding.tvCustomAppsHint.visibility = View.VISIBLE
+            for (pkg in customPackages) {
+                val appLabel = try {
+                    val info = pm.getApplicationInfo(pkg, 0)
+                    pm.getApplicationLabel(info).toString()
+                } catch (e: Exception) {
+                    pkg
+                }
+                names.add(appLabel)
+
+                // 添加带有删除图标的 Chip
+                val chip = com.google.android.material.chip.Chip(this).apply {
+                    text = appLabel
+                    isCloseIconVisible = true
+                    setOnCloseIconClickListener {
+                        if (PrefManager.isInCurfew()) {
+                            showNightLockCurfewDialog()
+                            return@setOnCloseIconClickListener
+                        }
+                        showUnlockReasonDialog(
+                            actionTitle = "移除对【$appLabel】的自律监控",
+                            onApproved = {
+                                val s = PrefManager.monitoredPackages.toMutableSet()
+                                s.remove(pkg)
+                                PrefManager.monitoredPackages = s
+                                updateMonitoredSummary()
+                                Toast.makeText(this@MainActivity, "⚪ 已移除【$appLabel】监控", Toast.LENGTH_SHORT).show()
+                            },
+                            onRejected = {}
+                        )
+                    }
+                }
+                binding.cgCustomApps.addView(chip)
+            }
+        } else {
+            binding.tvCustomAppsHint.visibility = View.GONE
+        }
+
         if (names.isEmpty()) {
-            binding.tvMonitoredSummary.text = "⚠️ 当前未勾选任何监控应用"
+            binding.tvMonitoredSummary.text = "⚠️ 当前未勾选任何监控应用或功能"
             binding.tvMonitoredSummary.setTextColor(getColor(R.color.warning))
         } else {
-            binding.tvMonitoredSummary.text = "🎯 当前已受控应用 (${names.size}个)：${names.joinToString("、")}"
+            binding.tvMonitoredSummary.text = "🎯 当前已受控 (${names.size}项)：${names.joinToString("、")}"
             binding.tvMonitoredSummary.setTextColor(getColor(R.color.primary))
         }
     }
 
+    private fun showNightLockCurfewDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("🌙 夜间防沉迷作息锁定中")
+            .setMessage("当前处于夜间作息保护时段（${PrefManager.getCurfewTimeDisplay()}）！\n\n为了避免深夜破戒刷手机导致作息紊乱，夜间宵禁时段内全面刚性锁定，禁止解除任何受控应用或功能！\n\n请立刻放下手机，早点入睡！")
+            .setPositiveButton("坚守底线，去睡觉", null)
+            .show()
+    }
+
     private fun saveAllConfig() {
         PrefManager.curfewEnabled = binding.switchCurfew.isChecked
+        PrefManager.wechatFinderEnabled = binding.cbWechatFinder.isChecked
+        PrefManager.wechatMomentsEnabled = binding.cbWechatMoments.isChecked
 
         val customMin = binding.etMainDefaultMinutes.text.toString().trim().toIntOrNull()
         if (customMin != null && customMin > 0) {
@@ -542,13 +676,14 @@ class MainActivity : AppCompatActivity() {
         PrefManager.baseUrl = binding.etBaseUrl.text.toString().trim()
         PrefManager.modelName = binding.etModelName.text.toString().trim()
 
-        val set = mutableSetOf<String>()
-        if (binding.cbXhs.isChecked) set.add("com.xingin.xhs")
-        if (binding.cbDouyin.isChecked) set.add("com.ss.android.ugc.aweme")
-        if (binding.cbBilibili.isChecked) set.add("tv.danmaku.bili")
-        if (binding.cbKuaishou.isChecked) set.add("com.smile.gifmaker")
-        if (binding.cbWeibo.isChecked) set.add("com.sina.weibo")
-        if (binding.cbChrome.isChecked) set.add("com.android.chrome")
+        val set = PrefManager.monitoredPackages.toMutableSet()
+        if (binding.cbXhs.isChecked) set.add("com.xingin.xhs") else set.remove("com.xingin.xhs")
+        if (binding.cbDouyin.isChecked) set.add("com.ss.android.ugc.aweme") else set.remove("com.ss.android.ugc.aweme")
+        if (binding.cbBilibili.isChecked) set.add("tv.danmaku.bili") else set.remove("tv.danmaku.bili")
+        if (binding.cbKuaishou.isChecked) set.add("com.smile.gifmaker") else set.remove("com.smile.gifmaker")
+        if (binding.cbWeibo.isChecked) set.add("com.sina.weibo") else set.remove("com.sina.weibo")
+        if (binding.cbTwitter.isChecked) set.add("com.twitter.android") else set.remove("com.twitter.android")
+        if (binding.cbChrome.isChecked) set.add("com.android.chrome") else set.remove("com.android.chrome")
 
         PrefManager.monitoredPackages = set
         updateMonitoredSummary()

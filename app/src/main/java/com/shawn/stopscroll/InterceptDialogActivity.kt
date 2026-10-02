@@ -174,6 +174,12 @@ class InterceptDialogActivity : AppCompatActivity() {
                 Toast.makeText(this@InterceptDialogActivity, "${auditResult.feedback} ($durationDesc)", Toast.LENGTH_SHORT).show()
 
                 // Launch the target app
+                if (targetPackage.startsWith("com.tencent.mm:")) {
+                    // 微信子功能（视频号/朋友圈）：直接关闭拦截弹窗即可直接回到用户正打开的视频号/朋友圈！
+                    finish()
+                    return@launch
+                }
+
                 val launchIntent = packageManager.getLaunchIntentForPackage(targetPackage)
                 if (launchIntent != null) {
                     launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
@@ -219,6 +225,9 @@ class InterceptDialogActivity : AppCompatActivity() {
     }
 
     private fun getAppName(pkg: String): String {
+        if (pkg == "com.tencent.mm:finder") return "微信视频号"
+        if (pkg == "com.tencent.mm:moments") return "微信朋友圈"
+        if (pkg == "com.twitter.android") return "Twitter (X)"
         return try {
             val pm = packageManager
             val info = pm.getApplicationInfo(pkg, 0)
@@ -230,6 +239,7 @@ class InterceptDialogActivity : AppCompatActivity() {
                 "tv.danmaku.bili" -> "哔哩哔哩"
                 "com.smile.gifmaker" -> "快手"
                 "com.sina.weibo" -> "微博"
+                "com.twitter.android" -> "Twitter (X)"
                 "com.android.chrome" -> "Chrome 浏览器"
                 else -> pkg
             }

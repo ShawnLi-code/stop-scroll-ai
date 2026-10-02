@@ -35,6 +35,17 @@ object PrefManager {
         get() = prefs.getString(KEY_MODEL, "deepseek-chat") ?: "deepseek-chat"
         set(value) = prefs.edit().putString(KEY_MODEL, value).apply()
 
+    private const val KEY_WECHAT_FINDER = "wechat_finder_monitored"
+    private const val KEY_WECHAT_MOMENTS = "wechat_moments_monitored"
+
+    var wechatFinderEnabled: Boolean
+        get() = prefs.getBoolean(KEY_WECHAT_FINDER, true)
+        set(value) = prefs.edit().putBoolean(KEY_WECHAT_FINDER, value).apply()
+
+    var wechatMomentsEnabled: Boolean
+        get() = prefs.getBoolean(KEY_WECHAT_MOMENTS, true)
+        set(value) = prefs.edit().putBoolean(KEY_WECHAT_MOMENTS, value).apply()
+
     var monitoredPackages: Set<String>
         get() = prefs.getStringSet(KEY_PACKAGES, setOf(
             "com.xingin.xhs",            // 小红书
@@ -42,11 +53,14 @@ object PrefManager {
             "tv.danmaku.bili",           // 哔哩哔哩
             "com.smile.gifmaker",        // 快手
             "com.sina.weibo",            // 微博
+            "com.twitter.android",       // Twitter (X)
             "com.android.chrome"         // 浏览器（方便在模拟器/手机快速测试）
         )) ?: emptySet()
         set(value) = prefs.edit().putStringSet(KEY_PACKAGES, value).apply()
 
     fun isMonitored(packageName: String): Boolean {
+        if (packageName == "com.tencent.mm:finder") return wechatFinderEnabled
+        if (packageName == "com.tencent.mm:moments") return wechatMomentsEnabled
         return monitoredPackages.contains(packageName)
     }
 

@@ -23,6 +23,11 @@
     <!-- 允许在应用内调起系统安装器进行覆盖安装更新（不丢数据、不重置权限） -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- 查询手机内已安装应用（用于自定义勾选/添加监控应用） -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <application
         android:name=".StopScrollApp"
         android:allowBackup="true"
@@ -58,6 +63,12 @@
             android:excludeFromRecents="true"
             android:exported="true" />
 
+        <!-- 手机已安装应用选择器 Activity -->
+        <activity
+            android:name=".AppPickerActivity"
+            android:excludeFromRecents="true"
+            android:exported="true" />
+
         <!-- 核心无障碍监控服务 -->
         <service
             android:name=".service.StopScrollAccessibilityService"
@@ -72,6 +83,8 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
+        </service>
+
         <!-- FileProvider 支持应用内直接下载并调起系统覆盖安装更新 -->
         <provider
             android:name="androidx.core.content.FileProvider"

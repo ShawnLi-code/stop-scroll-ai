@@ -152,14 +152,25 @@ class StopScrollAccessibilityService : AccessibilityService() {
             if (event == null) return
 
             val pkgName = event.packageName?.toString() ?: return
+            val className = event.className?.toString() ?: ""
 
             // 1. 如果正在显示拦截/告警页面，忽略一切事件，避免死循环
             if (SessionManager.isInterceptDialogShowing) {
                 return
             }
 
-            // 2. 检查是否是被监控的应用（小红书、抖音、Chrome等）
-            if (!PrefManager.isMonitored(pkgName)) {
+            // 2. 判别是否是微信子功能（视频号 / 朋友圈）或普通受控应用
+            var effectivePkg = pkgName
+            if (pkgName == "com.tencent.mm") {
+                if (PrefManager.wechatFinderEnabled && (className.contains("plugin.finder") || className.contains("FinderHome"))) {
+                    effectivePkg = "com.tencent.mm:finder"
+                } else if (PrefManager.wechatMomentsEnabled && (className.contains("plugin.sns") || className.contains("SnsTimeLine"))) {
+                    effectivePkg = "com.tencent.mm:moments"
+                } else if (!PrefManager.isMonitored("com.tencent.mm")) {
+                    // 用户在微信正常聊天、发语音、微信支付，非视频号/朋友圈，完全不拦截！
+                    return
+                }
+            } else if (!PrefManager.isMonitored(pkgName)) {
                 return
             }
 
@@ -168,12 +179,17 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 val now = System.currentTimeMillis()
                 if (now - lastInterceptTime > 1500L) {
                     lastInterceptTime = now
-                    Log.i("StopScroll", "🌙 Curfew active! Intercepting $pkgName (${PrefManager.getCurfewTimeDisplay()})")
+                    val appDisplayName = when (effectivePkg) {
+                        "com.tencent.mm:finder" -> "微信视频号"
+                        "com.tencent.mm:moments" -> "微信朋友圈"
+                        else -> pkgName
+                    }
+                    Log.i("StopScroll", "🌙 Curfew active! Intercepting $effectivePkg (${PrefManager.getCurfewTimeDisplay()})")
                     vibrateDevice(600L)
                     triggerAlert(
-                        pkgName,
+                        effectivePkg,
                         "🌙 夜间防沉迷宵禁！",
-                        "当前已进入夜间作息保护时段（${PrefManager.getCurfewTimeDisplay()}）！\n\n夜深了，为了保护睡眠质量与明日精力，此时间段内禁止打开娱乐短视频应用。\n\n请立刻放下手机，好好休息！",
+                        "当前已进入夜间作息保护时段（${PrefManager.getCurfewTimeDisplay()}）！\n\n夜深了，为了保护睡眠质量与明日精力，此时间段内禁止打开【$appDisplayName】等娱乐应用。\n\n请立刻放下手机，好好休息！",
                         "🌙"
                     )
                 }
@@ -181,14 +197,14 @@ class StopScrollAccessibilityService : AccessibilityService() {
             }
 
             // 4. 如果当前应用【没有合法 Session】，并且是【窗口打开切换事件】-> 触发意图拦截！
-            if (!SessionManager.isSessionActiveFor(pkgName)) {
+            if (!SessionManager.isSessionActiveFor(effectivePkg)) {
                 if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                     val now = System.currentTimeMillis()
                     // 防抖 1.5 秒
                     if (now - lastInterceptTime > 1500L) {
                         lastInterceptTime = now
-                        Log.i("StopScroll", "Intercepting target app open: $pkgName")
-                        interceptApp(pkgName)
+                        Log.i("StopScroll", "Intercepting target open: $effectivePkg")
+                        interceptApp(effectivePkg)
                     }
                 }
                 return
