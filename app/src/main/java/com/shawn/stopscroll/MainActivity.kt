@@ -300,6 +300,92 @@ class MainActivity : AppCompatActivity() {
         binding.btnOpenHistory.setOnClickListener {
             startActivity(Intent(this, HistoryActivity::class.java))
         }
+
+        // Check Update Button
+        binding.btnCheckUpdate.setOnClickListener {
+            checkAppUpdate(isManual = true)
+        }
+    }
+
+    private fun checkAppUpdate(isManual: Boolean) {
+        val currentVersion = BuildConfig.VERSION_NAME
+        if (isManual) {
+            binding.btnCheckUpdate.isEnabled = false
+            binding.btnCheckUpdate.text = "检查中..."
+        }
+
+        lifecycleScope.launch {
+            val result = com.shawn.stopscroll.update.UpdateManager.checkLatestVersion(currentVersion)
+            if (isManual) {
+                binding.btnCheckUpdate.isEnabled = true
+                binding.btnCheckUpdate.text = "🔄 检查更新"
+            }
+
+            result.fold(
+                onSuccess = { info ->
+                    if (info.hasNewVersion) {
+                        showUpdateAvailableDialog(info)
+                    } else {
+                        if (isManual) {
+                            Toast.makeText(this@MainActivity, "🎉 当前已是最新版本 (v$currentVersion)，无需更新！", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                onFailure = { e ->
+                    if (isManual) {
+                        Toast.makeText(this@MainActivity, "检查更新失败: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            )
+        }
+    }
+
+    private fun showUpdateAvailableDialog(info: com.shawn.stopscroll.update.VersionInfo) {
+        AlertDialog.Builder(this)
+            .setTitle("🎉 发现新版本 ${info.tagName}")
+            .setMessage("新版本特性与更新内容：\n\n${info.releaseNotes}\n\n💡 本更新为无损覆盖安装，将自动保留现有全部数据、自律统计及无障碍授权！")
+            .setPositiveButton("立即一键更新") { _, _ ->
+                startDownloadAndInstall(info.downloadUrl, info.tagName)
+            }
+            .setNegativeButton("稍后再说", null)
+            .show()
+    }
+
+    private fun startDownloadAndInstall(downloadUrl: String, tagName: String) {
+        @Suppress("DEPRECATION")
+        val progressDialog = android.app.ProgressDialog(this).apply {
+            setTitle("正在下载 $tagName")
+            setMessage("正在加速下载安装包，请稍候...")
+            setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL)
+            max = 100
+            setCancelable(false)
+            show()
+        }
+
+        lifecycleScope.launch {
+            val res = com.shawn.stopscroll.update.UpdateManager.downloadAndInstallApk(
+                activity = this@MainActivity,
+                downloadUrl = downloadUrl,
+                onProgress = { percent ->
+                    progressDialog.progress = percent
+                    progressDialog.setMessage("已下载 $percent%...")
+                }
+            )
+
+            progressDialog.dismiss()
+
+            res.onFailure { err ->
+                AlertDialog.Builder(this@MainActivity)
+                    .setTitle("下载更新失败")
+                    .setMessage("${err.message}\n\n建议直接访问 GitHub Releases 页面下载。")
+                    .setPositiveButton("打开网页下载") { _, _ ->
+                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ShawnLi-code/stop-scroll-ai/releases"))
+                        startActivity(browserIntent)
+                    }
+                    .setNegativeButton("取消", null)
+                    .show()
+            }
+        }
     }
 
     private fun updateCurfewDisplay() {

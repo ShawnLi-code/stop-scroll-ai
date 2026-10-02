@@ -11,10 +11,19 @@ android {
         applicationId = "com.shawn.stopscroll"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.0.7"
+        versionCode = 9
+        versionName = "1.0.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("release.jks")
+            storePassword = "stopscroll123"
+            keyAlias = "stopscroll"
+            keyPassword = "stopscroll123"
+        }
     }
 
     buildTypes {
@@ -24,10 +33,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug") // Use debug keystore for easy installation without signing setup
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             applicationIdSuffix = ""
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

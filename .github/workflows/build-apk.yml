@@ -34,37 +34,43 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release_output
-          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.7.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.8.apk
           ls -lh release_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StopScrollAI-v1.0.7-APK
-          path: release_output/StopScrollAI-v1.0.7.apk
+          name: StopScrollAI-v1.0.8-APK
+          path: release_output/StopScrollAI-v1.0.8.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.7
-          name: StopScroll AI v1.0.7 (AI进入理由严厉审查 + 夜间宵禁防破戒刚性锁 + 智谱GLM永久免费预设)
+          tag_name: v1.0.8
+          name: StopScroll AI v1.0.8 (永久固定签名无损覆盖安装 + 应用内一键检查更新与自动安装)
           body: |
-            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.7 重大自律升级
+            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.8
             
-            #### 核心重磅升级：
-            1. **🤖 AI 打开理由严格审核打回 (告别随便输单字)**：
+            #### 核心重磅升级（彻底告别每次卸载重装）：
+            1. **🔑 永久固定统一签名密钥（彻底支持覆盖安装更新）**：
+               - 本版本起采用项目专属永久固定证书签名，再也不会出现“安装失败/签名冲突需先卸载”的问题；
+               - **后续所有版本均可直接覆盖安装，100%保留所有使用历史数据、API配置和无障碍授权！**
+            2. **🔄 应用内一键在线检查更新与自动下载安装**：
+               - 主页顶部新增「🔄 检查更新」按钮；
+               - 发现新版自动拉取版本日志，点击即可在应用内极速下载并通过系统安装器直接覆盖升级；
+            3. **🤖 AI 打开理由严格审核打回 (告别随便输单字)**：
                - 每次进入受控应用时，由 AI 自律教练严格评估目标理由；
                - 坚决打回单字、无意义乱码、模糊敷衍借口（如“随便看看”、“无聊”、“看视频”）以及纯娱乐沉迷借口（如“看美女”、“刷段子”）；
                - 只有具体正当的学习、工作与实用生活目的才准予进入！
-            2. **🌙 夜间宵禁防破戒刚性安全锁 (彻底杜绝深夜刷到凌晨1点)**：
+            4. **🌙 夜间宵禁防破戒刚性安全锁 (彻底杜绝深夜刷到凌晨1点)**：
                - 在夜间作息保护时段（23:00 - 06:00），系统处于刚性闭锁状态，禁止关闭宵禁，禁止解除任何受控应用！
                - 白天时段若要解除限制，必须通过 AI 防破戒理由审查，杜绝冲动沉迷。
-            3. **🎁 国内永久免费 AI 大模型一键预设 (智谱 GLM-4-Flash / 硅基流动)**：
+            5. **🎁 国内永久免费 AI 大模型一键预设 (智谱 GLM-4-Flash / 硅基流动)**：
                - 一键填入【智谱 GLM-4-Flash】永久免费配置，国内高速直连无需梯子，延迟仅200ms，0元无费用；
                - 内置本地智能离线自律审核引擎，不配 Key 也能严厉打回敷衍借口。
-            4. **❄️ 屏幕监护防发热与超低功耗引擎**：
+            6. **❄️ 屏幕监护防发热与超低功耗引擎**：
                - 纯轻量级无障碍文字提取（0 截屏、0 GPU、0 图像编码）；
                - 屏幕文本 Hash 差分去重 + 本地目标相关词快速放行，不滑动不耗电，手机彻底告别发烫。
-          files: release_output/StopScrollAI-v1.0.7.apk
+          files: release_output/StopScrollAI-v1.0.8.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
