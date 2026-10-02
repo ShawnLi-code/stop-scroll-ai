@@ -72,6 +72,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // 2.1 Daily Limit & AI Macro Audit Views
+        binding.switchAiMacroAudit.isChecked = PrefManager.aiMacroAuditEnabled
+        val dailyLimit = PrefManager.dailyLimitMinutes
+        when (dailyLimit) {
+            30 -> binding.limitChip30.isChecked = true
+            60 -> binding.limitChip60.isChecked = true
+            90 -> binding.limitChip90.isChecked = true
+            120 -> binding.limitChip120.isChecked = true
+            else -> {
+                binding.chipGroupDailyLimit.clearCheck()
+                binding.etCustomDailyLimit.setText(dailyLimit.toString())
+            }
+        }
+
         // 3. Load AI Config
         binding.etApiKey.setText(PrefManager.apiKey)
         binding.etBaseUrl.setText(PrefManager.baseUrl)
@@ -222,6 +236,35 @@ class MainActivity : AppCompatActivity() {
         binding.etMainDefaultMinutes.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 binding.chipGroupMainDuration.clearCheck()
+            }
+        }
+
+        // Daily Limit & Macro Audit Listeners
+        binding.switchAiMacroAudit.setOnCheckedChangeListener { _, isChecked ->
+            PrefManager.aiMacroAuditEnabled = isChecked
+            val status = if (isChecked) "已开启" else "已关闭"
+            Toast.makeText(this, "🧠 AI 每日综合自律监控$status", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.chipGroupDailyLimit.setOnCheckedChangeListener { _, checkedId ->
+            if (checkedId != View.NO_ID) {
+                binding.etCustomDailyLimit.text.clear()
+                val limit = when (checkedId) {
+                    binding.limitChip30.id -> 30
+                    binding.limitChip60.id -> 60
+                    binding.limitChip90.id -> 90
+                    binding.limitChip120.id -> 120
+                    else -> 60
+                }
+                PrefManager.dailyLimitMinutes = limit
+                val desc = if (limit >= 60 && limit % 60 == 0) "${limit / 60}小时" else "${limit}分钟"
+                Toast.makeText(this, "🎯 每日自律上限已设为: $desc", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.etCustomDailyLimit.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                binding.chipGroupDailyLimit.clearCheck()
             }
         }
 
@@ -674,6 +717,12 @@ class MainActivity : AppCompatActivity() {
         val customMin = binding.etMainDefaultMinutes.text.toString().trim().toIntOrNull()
         if (customMin != null && customMin > 0) {
             PrefManager.defaultDurationMinutes = customMin
+        }
+
+        PrefManager.aiMacroAuditEnabled = binding.switchAiMacroAudit.isChecked
+        val customLimit = binding.etCustomDailyLimit.text.toString().trim().toIntOrNull()
+        if (customLimit != null && customLimit > 0) {
+            PrefManager.dailyLimitMinutes = customLimit
         }
 
         PrefManager.apiKey = binding.etApiKey.text.toString().trim()

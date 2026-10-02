@@ -88,13 +88,34 @@ class StopScrollAccessibilityService : AccessibilityService() {
         // 强震动提示
         vibrateDevice(800L)
 
+        // 查询今日宏观累计使用情况
+        val todayStr = com.shawn.stopscroll.data.RecordManager.getTodayDateString()
+        val todaySummary = com.shawn.stopscroll.data.RecordManager.getDaySummary(todayStr)
+        val todayMinutes = todaySummary.totalMinutes
+        val todayCount = todaySummary.count
+        val dailyLimit = com.shawn.stopscroll.data.PrefManager.dailyLimitMinutes
+
+        val hours = todayMinutes / 60
+        val remMin = todayMinutes % 60
+        val todayTimeDesc = if (hours > 0) "${hours}小时${remMin}分钟" else "${todayMinutes}分钟"
+
+        val title: String
+        val msg: String
+        val icon: String
+
+        if (todayMinutes >= dailyLimit) {
+            title = "🛑 今日自律额度已彻底透支！"
+            icon = "🛑"
+            msg = "你设定的【$goal】(${minutes}分钟) 时长已用尽！\n\n📊 今日累计在受控应用上已消耗【$todayTimeDesc】(已打开${todayCount}次)，已达到或超出每日自律上限(${dailyLimit}分钟)！\n\n🧠 AI 教练诊断：大脑已处于认知疲劳状态，今日禁止再开启娱乐应用刷屏！若确有突发紧急要事，必须提交紧急特批申请。"
+        } else {
+            val remain = dailyLimit - todayMinutes
+            title = "⏰ 专注时间已到！"
+            icon = "⏰"
+            msg = "你设定的【$goal】(${minutes}分钟) 时长已用尽！\n\n📊 今日累计已使用【$todayTimeDesc】(今日剩余自律额度: ${remain.coerceAtLeast(0)}分钟)。\n\n请立刻放下手机，让眼睛与大脑休息一下吧！"
+        }
+
         // 立即强弹超时阻断卡片
-        triggerAlert(
-            pkg,
-            "⏰ 专注时间已到！",
-            "你设定的【$goal】(${minutes}分钟) 时长已用尽！\n\n请立刻放下手机，让眼睛和大脑休息一下吧。",
-            "⏰"
-        )
+        triggerAlert(pkg, title, msg, icon)
     }
 
     private fun startAiMonitor(packageName: String, userGoal: String) {

@@ -22,6 +22,13 @@ data class AiAuditResult(
     val feedback: String
 )
 
+data class AiMacroAuditResult(
+    val passed: Boolean,
+    val isLimitExceeded: Boolean,
+    val feedback: String,
+    val isEmergencyAllowed: Boolean = false
+)
+
 object AiService {
     private val client = OkHttpClient.Builder()
         .connectTimeout(6, TimeUnit.SECONDS)
@@ -76,6 +83,164 @@ object AiService {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * 🧠 AI 综合宏观自律决策引擎
+     * 结合今日累计已用时间、打开频次、历史进入理由，综合判断是否还能再刷！
+     * 若今日时长已超标/严重疲劳，实行熔断机制，只允许【紧急/关键刚需理由】进入！
+     */
+    suspend fun auditGoalWithDailyContext(
+        appName: String,
+        goal: String,
+        requestedMinutes: Int,
+        todayMinutes: Int,
+        todayCount: Int,
+        todayRecords: List<com.shawn.stopscroll.data.UsageRecord>,
+        dailyLimitMinutes: Int = PrefManager.dailyLimitMinutes
+    ): AiMacroAuditResult = withContext(Dispatchers.IO) {
+        val trimmed = goal.trim()
+
+        // 1. 基础硬性规则预筛
+        val localCheck = localCheckGoal(trimmed)
+        if (localCheck != null) {
+            return@withContext AiMacroAuditResult(
+                passed = false,
+                isLimitExceeded = todayMinutes >= dailyLimitMinutes,
+                feedback = localCheck.feedback
+            )
+        }
+
+        val isExceeded = (todayMinutes >= dailyLimitMinutes) || (todayMinutes + requestedMinutes > dailyLimitMinutes + 10)
+        val apiKey = PrefManager.apiKey.trim()
+
+        // 2. 如果今日已严重超标，触发【每日限额熔断限制】！
+        if (isExceeded && PrefManager.aiMacroAuditEnabled) {
+            val emergencyKeywords = listOf(
+                "紧急", "事故", "故障", "急事", "突发", "救急", "重要客户",
+                "签合同", "医院", "加急", "报警", "排障", "业务瘫痪", "重要通知"
+            )
+            val isLocalEmergency = emergencyKeywords.any { trimmed.contains(it) } && trimmed.length >= 6
+
+            // 如果没配 Key 或本地离线模式
+            if (apiKey.isBlank()) {
+                return@withContext if (isLocalEmergency) {
+                    AiMacroAuditResult(
+                        passed = true,
+                        isLimitExceeded = true,
+                        feedback = "🚨 检测到紧急突发事由，破例批准进入！请务必在 ${requestedMinutes} 分钟内处理完毕，严禁浏览无关内容！",
+                        isEmergencyAllowed = true
+                    )
+                } else {
+                    AiMacroAuditResult(
+                        passed = false,
+                        isLimitExceeded = true,
+                        feedback = "🛑 今日自律限额熔断：今日已累计使用【${todayMinutes}分钟】(打开${todayCount}次)，已超每日上限(${dailyLimitMinutes}分钟)！当前理由非紧急重大事项，坚决驳回！若有不可延误的紧急突发要事，请在理由中详述突发紧急情况。",
+                        isEmergencyAllowed = false
+                    )
+                }
+            }
+
+            // 拥有大模型 Key：调用 LLM 进行全量历史与疲劳度深度裁决
+            try {
+                val url = cleanUrl(PrefManager.baseUrl) + "/chat/completions"
+                val historyStr = if (todayRecords.isNotEmpty()) {
+                    todayRecords.take(4).joinToString("\n") { "- ${it.appName}(${it.durationMinutes}m): ${it.userGoal}" }
+                } else {
+                    "今日暂无此前明细记录"
+                }
+
+                val systemPrompt = """
+                    你是一个极度严谨的「AI 每日自律决策与防沉迷总教练」。
+                    用户今日在受控应用（短视频/娱乐）已累计使用【$todayMinutes 分钟】（健康上限为 $dailyLimitMinutes 分钟），已累计打开 $todayCount 次。
+                    用户今日前序记录：
+                    $historyStr
+
+                    当前用户又试图打开【$appName】(申请时长: $requestedMinutes 分钟)，提交理由为：“$trimmed”。
+
+                    【判别准则】：
+                    1. 用户今日累计使用时长已达到或超过上限，大脑处于认知疲劳与沉迷依赖状态！常规学习、做菜、剪辑、查资料、看教程等理由【一律坚决驳回 (REJECT)】，避免借口化沉迷！
+                    2. 只有当用户阐述的理由是【真正不可延误的突发紧急工作/重大业务故障/家庭突发要事】时，才可破例批准 (APPROVE)。
+                    3. 输出格式必须严格为以下两种之一，绝无多余字符：
+                       REJECT|提示语（必须点明今日已刷 $todayMinutes 分钟超标，指出其借口不能作为超额破例的依据，给出严厉心理警醒与放下手机的建议，25-45字）
+                       APPROVE|破例说明（点明这是今日超额后的紧急破例，严肃提醒只处理紧急事项，限时完成立即退出，15-25字）
+                """.trimIndent()
+
+                val bodyJson = JsonObject().apply {
+                    addProperty("model", PrefManager.modelName)
+                    val messages = com.google.gson.JsonArray().apply {
+                        add(JsonObject().apply {
+                            addProperty("role", "system")
+                            addProperty("content", systemPrompt)
+                        })
+                        add(JsonObject().apply {
+                            addProperty("role", "user")
+                            addProperty("content", "今日总时长已达 $todayMinutes 分钟，当前申请理由：$trimmed")
+                        })
+                    }
+                    add("messages", messages)
+                    addProperty("temperature", 0.1)
+                    addProperty("max_tokens", 80)
+                }
+
+                val request = Request.Builder()
+                    .url(url)
+                    .addHeader("Authorization", "Bearer $apiKey")
+                    .addHeader("Content-Type", "application/json")
+                    .post(bodyJson.toString().toRequestBody(JSON_MEDIA_TYPE))
+                    .build()
+
+                val response = client.newCall(request).execute()
+                if (response.isSuccessful) {
+                    val respStr = response.body?.string() ?: ""
+                    val jsonObj = gson.fromJson(respStr, JsonObject::class.java)
+                    val reply = jsonObj.getAsJsonArray("choices")
+                        ?.get(0)?.asJsonObject
+                        ?.getAsJsonObject("message")
+                        ?.get("content")?.asString?.trim() ?: ""
+
+                    if (reply.startsWith("REJECT", ignoreCase = true)) {
+                        val reason = reply.substringAfter("|", "今日已累计使用 ${todayMinutes} 分钟，已达上限！非紧急理由不可再刷，请放下手机！").trim()
+                        return@withContext AiMacroAuditResult(passed = false, isLimitExceeded = true, feedback = reason)
+                    } else if (reply.startsWith("APPROVE", ignoreCase = true)) {
+                        val note = reply.substringAfter("|", "紧急事由已确认，请速战速决！").trim()
+                        return@withContext AiMacroAuditResult(passed = true, isLimitExceeded = true, feedback = note, isEmergencyAllowed = true)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("StopScroll", "AI macro audit error: ${e.message}")
+            }
+
+            // 网络异常回退到本地紧急词判断
+            return@withContext if (isLocalEmergency) {
+                AiMacroAuditResult(
+                    passed = true,
+                    isLimitExceeded = true,
+                    feedback = "🚨 检测到紧急事由，破例批准进入！请务必在 ${requestedMinutes} 分钟内处理完毕！",
+                    isEmergencyAllowed = true
+                )
+            } else {
+                AiMacroAuditResult(
+                    passed = false,
+                    isLimitExceeded = true,
+                    feedback = "🛑 今日累计已用【${todayMinutes}分钟】已超每日上限(${dailyLimitMinutes}分钟)！非紧急理由不可再刷，请放下手机好好休息！"
+                )
+            }
+        }
+
+        // 3. 未超限时：常规单次目标审查
+        val standardResult = auditGoalReason(appName, trimmed)
+        if (!standardResult.passed) {
+            return@withContext AiMacroAuditResult(passed = false, isLimitExceeded = false, feedback = standardResult.feedback)
+        }
+
+        val feedback = if (todayMinutes + requestedMinutes >= dailyLimitMinutes * 0.7) {
+            "${standardResult.feedback}（注意：今日已用 ${todayMinutes} 分钟，自律额度所剩不多，请全神贯注！）"
+        } else {
+            standardResult.feedback
+        }
+
+        return@withContext AiMacroAuditResult(passed = true, isLimitExceeded = false, feedback = feedback)
     }
 
     /**

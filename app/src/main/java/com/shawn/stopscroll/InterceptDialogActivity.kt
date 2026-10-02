@@ -81,6 +81,44 @@ class InterceptDialogActivity : AppCompatActivity() {
         val appName = getAppName(targetPackage)
         binding.tvTargetAppInfo.text = "检测到你正在打开：$appName"
 
+        // 加载今日宏观使用统计
+        val todayStr = com.shawn.stopscroll.data.RecordManager.getTodayDateString()
+        val todaySummary = com.shawn.stopscroll.data.RecordManager.getDaySummary(todayStr)
+        val todayMinutes = todaySummary.totalMinutes
+        val todayCount = todaySummary.count
+        val dailyLimit = com.shawn.stopscroll.data.PrefManager.dailyLimitMinutes
+
+        val hours = todayMinutes / 60
+        val remMin = todayMinutes % 60
+        val todayTimeDesc = if (hours > 0) "${hours}小时${remMin}分钟" else "${todayMinutes}分钟"
+        val limitDesc = if (dailyLimit >= 60 && dailyLimit % 60 == 0) "${dailyLimit / 60}小时" else "${dailyLimit}分钟"
+
+        binding.tvTodayStats.text = "📊 今日已用：$todayTimeDesc (已打开${todayCount}次) | 自律限额 $limitDesc"
+
+        if (todayMinutes >= dailyLimit) {
+            binding.tvTodayLimitAlert.visibility = View.VISIBLE
+            binding.tvTodayLimitAlert.text = "⚠️ 今日自律额度已超标（已用$todayTimeDesc）！AI 启动强力熔断，普通娱乐/消遣理由一律驳回，仅接受紧急重大要事！"
+            binding.layoutTodayStats.setBackgroundColor(android.graphics.Color.parseColor("#25EF4444"))
+            binding.tvTodayStats.setTextColor(android.graphics.Color.parseColor("#FCA5A5"))
+        } else if (todayMinutes >= (dailyLimit * 0.75)) {
+            binding.tvTodayLimitAlert.visibility = View.VISIBLE
+            binding.tvTodayLimitAlert.text = "⚠️ 今日自律额度即将见底，请尽量缩短本次使用，严防超额！"
+            binding.tvTodayLimitAlert.setTextColor(android.graphics.Color.parseColor("#FBBF24"))
+            binding.layoutTodayStats.setBackgroundColor(android.graphics.Color.parseColor("#15FBBF24"))
+        } else {
+            binding.tvTodayLimitAlert.visibility = View.GONE
+            binding.layoutTodayStats.setBackgroundColor(android.graphics.Color.parseColor("#153B82F6"))
+            binding.tvTodayStats.setTextColor(android.graphics.Color.parseColor("#93C5FD"))
+        }
+
+        binding.btnApplyEmergency.setOnClickListener {
+            binding.layoutGoalReject.visibility = View.GONE
+            binding.etUserGoal.text.clear()
+            binding.etUserGoal.hint = "🚨 请详细写明必须处理的突发紧急要事（AI将严格进行特批审查）"
+            binding.etUserGoal.requestFocus()
+            Toast.makeText(this, "请输入不可延误的紧急突发要事，AI将进行紧急特批审查", Toast.LENGTH_SHORT).show()
+        }
+
         // 加载默认时长配置
         val defaultMin = com.shawn.stopscroll.data.PrefManager.defaultDurationMinutes
         when (defaultMin) {
@@ -111,33 +149,17 @@ class InterceptDialogActivity : AppCompatActivity() {
         binding.btnEnterApp.setOnClickListener {
             val goal = binding.etUserGoal.text.toString().trim()
             if (goal.isEmpty()) {
-                Toast.makeText(this, "请先写下你打开的具体目标！", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "请先写下你打开的具体目标或紧急事由！", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             // 先隐藏上一次的打回提示
             binding.layoutGoalReject.visibility = View.GONE
             binding.btnEnterApp.isEnabled = false
-            binding.btnEnterApp.text = "🤖 AI 自律教练审查中..."
+            binding.btnEnterApp.text = "🤖 AI 综合自律评估中..."
 
             lifecycleScope.launch {
                 val appName = getAppName(targetPackage)
-                val auditResult = com.shawn.stopscroll.ai.AiService.auditGoalReason(appName, goal)
-
-                if (!auditResult.passed) {
-                    // ❌ 审核未通过：坚决打回！禁止进入！
-                    binding.btnEnterApp.isEnabled = true
-                    binding.btnEnterApp.text = "✅ 重新提交正当目标"
-                    binding.layoutGoalReject.visibility = View.VISIBLE
-                    binding.tvGoalRejectReason.text = auditResult.feedback
-
-                    // 警告震动
-                    vibrateWarning()
-                    Toast.makeText(this@InterceptDialogActivity, "🚫 目标理由已被打回！请看提示重新输入", Toast.LENGTH_LONG).show()
-                    return@launch
-                }
-
-                // ✅ 审核通过：放行进入目标应用
                 val customText = binding.etCustomMinutes.text.toString().trim()
                 val customVal = customText.toIntOrNull()
 
@@ -154,6 +176,41 @@ class InterceptDialogActivity : AppCompatActivity() {
                     }
                 }
 
+                val currentTodaySummary = com.shawn.stopscroll.data.RecordManager.getDaySummary(todayStr)
+                val todayRecords = com.shawn.stopscroll.data.RecordManager.getRecordsForDate(todayStr)
+
+                // 🧠 调用包含今日已用总时长与打开频次的宏观决策审查！
+                val auditResult = com.shawn.stopscroll.ai.AiService.auditGoalWithDailyContext(
+                    appName = appName,
+                    goal = goal,
+                    requestedMinutes = durationMinutes,
+                    todayMinutes = currentTodaySummary.totalMinutes,
+                    todayCount = currentTodaySummary.count,
+                    todayRecords = todayRecords,
+                    dailyLimitMinutes = dailyLimit
+                )
+
+                if (!auditResult.passed) {
+                    // ❌ 审核未通过：坚决打回！禁止进入！
+                    binding.btnEnterApp.isEnabled = true
+                    binding.btnEnterApp.text = "✅ 重新提交审核"
+                    binding.layoutGoalReject.visibility = View.VISIBLE
+                    binding.tvGoalRejectReason.text = auditResult.feedback
+
+                    // 如果是因为超出今日限额被打回，显示紧急特批申请入口
+                    if (auditResult.isLimitExceeded) {
+                        binding.btnApplyEmergency.visibility = View.VISIBLE
+                    } else {
+                        binding.btnApplyEmergency.visibility = View.GONE
+                    }
+
+                    // 警告震动
+                    vibrateWarning()
+                    Toast.makeText(this@InterceptDialogActivity, "🚫 未通过自律审查！请看提示", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+
+                // ✅ 审核通过：放行进入目标应用
                 val durationDesc = if (durationMinutes >= 60 && durationMinutes % 60 == 0) {
                     "${durationMinutes / 60}小时"
                 } else {
@@ -171,7 +228,7 @@ class InterceptDialogActivity : AppCompatActivity() {
                     durationMinutes = durationMinutes
                 )
 
-                Toast.makeText(this@InterceptDialogActivity, "${auditResult.feedback} ($durationDesc)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@InterceptDialogActivity, "${auditResult.feedback} ($durationDesc)", Toast.LENGTH_LONG).show()
 
                 // Launch the target app
                 if (targetPackage.startsWith("com.tencent.mm:")) {

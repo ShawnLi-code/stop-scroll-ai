@@ -34,41 +34,37 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release_output
-          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.0.9.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.1.0.apk
           ls -lh release_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StopScrollAI-v1.0.9-APK
-          path: release_output/StopScrollAI-v1.0.9.apk
+          name: StopScrollAI-v1.1.0-APK
+          path: release_output/StopScrollAI-v1.1.0.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.9
-          name: StopScroll AI v1.0.9 (自定义选择手机任意应用 + 微信视频号/朋友圈精准拦截 + 永久签名无损覆盖)
+          tag_name: v1.1.0
+          name: StopScroll AI v1.1.0 (AI 综合全天时长与理由防沉迷监控 + 今日限额熔断与紧急特批机制)
           body: |
-            ### 🛡️ 别刷了 AI (StopScroll AI) v1.0.9 重磅自律升级
+            ### 🛡️ 别刷了 AI (StopScroll AI) v1.1.0 重磅自律决策升级
             
             #### 核心重磅升级：
-            1. **📱 自由选择手机里的任意已安装应用 (自定义 App 选择器)**：
-               - 新增「➕ 从手机中选择更多已安装应用」页面；
-               - 支持搜索手机内所有已安装的应用（Twitter/X、游戏、论坛、资讯等），任意勾选一键纳入自律监控；
-               - 主页动态显示所有已选应用，支持便捷管理与移除保护。
-            2. **💚 微信子功能专属精准拦截（沉迷功能精确管控，绝不影响正常聊天）**：
-               - 📺 **微信视频号**：精准识别并拦截视频号沉迷，不影响微信聊天；
-               - 📸 **微信朋友圈**：精准拦截刷朋友圈动态，不影响日常收发消息与微信支付；
-            3. **🔑 永久固定统一签名密钥（彻底告别卸载重装，无损覆盖升级）**：
-               - 固化项目永久开发者签名密钥，所有后续升级直接覆盖，100%保留所有历史统计、API配置与系统权限！
-            4. **🔄 应用内一键在线检查更新与自动安装**：
-               - 主页顶部一键检测新版，在线极速下载并通过系统安装器直接覆盖升级；
-            5. **🤖 AI 打开理由严格审核打回 (告别随便输单字)**：
-               - 严厉打回单字、无意义乱码、模糊敷衍借口与纯娱乐沉迷借口！
-            6. **🌙 夜间宵禁防破戒刚性安全锁 (彻底杜绝深夜刷到凌晨1点)**：
-               - 夜间宵禁时段（23:00 - 06:00）刚性死锁，严禁关闭宵禁与解除监控！
-            7. **🎁 国内永久免费 AI 大模型一键预设 (智谱 GLM-4-Flash 永久免费)**：
-               - 0元无费用，国内直连无需梯子，延迟仅200ms。
-          files: release_output/StopScrollAI-v1.0.9.apk
+            1. **🧠 AI 全天使用时长与理由综合监控 (拒绝温水煮青蛙)**：
+               - AI 不再只孤立审核当前单次理由，而是**全面结合今天累计已用的总时长、今日打开频次、以及今天此前所有的理由记录**！
+               - 智能评估当前是否已处于认知疲劳和高频沉迷状态，综合判断今天是否还能再刷；
+            2. **🛑 今日自律限额刚性熔断 (超标后常规理由一律驳回)**：
+               - 主页支持自定义每日自律上限（默认 60 分钟，支持 30m、60m、90m、120m 或自定义）；
+               - 当今日累计时长达到上限后，AI 启动强力自律熔断，所有常规消遣借口（哪怕是“学习”、“查资料”、“做饭”等）一律驳回并给出犀利警醒，坚决防止自我欺骗；
+            3. **🚨 紧急突发重大要事特批放行机制**：
+               - 当今日额度超限被熔断后，若确有不可延误的突发紧急要事（如线上突发故障、重要商务签约紧急回复、突发紧急联络等），可申请紧急特批；
+               - AI 将进行极严苛的突发紧急度审查，仅对确凿紧急事项破例放行，并在规定时间内严格收尾；
+            4. **⏰ 刚性超时智能疲劳度诊断与警醒**：
+               - 倒计时时间一到，系统主动分析今日累计消耗的总精力与总时间，如果今日额度已透支，直接给出深度警醒并禁止继续刷屏；
+            5. **📱 自由勾选手机里的任意应用 + 微信视频号/朋友圈精准拦截**；
+            6. **🔑 永久固定签名证书，支持应用内一键无损覆盖升级，数据与权限永久保留**！
+          files: release_output/StopScrollAI-v1.1.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

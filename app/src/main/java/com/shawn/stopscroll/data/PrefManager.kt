@@ -16,6 +16,8 @@ object PrefManager {
     private const val KEY_CURFEW_END_MIN = "curfew_end_min"
     private const val KEY_DEFAULT_DURATION = "default_duration_min"
     private const val KEY_CUSTOM_DURATIONS = "custom_durations"
+    private const val KEY_DAILY_LIMIT = "daily_limit_minutes"
+    private const val KEY_AI_MACRO_AUDIT = "ai_macro_audit_enabled"
 
     private lateinit var prefs: SharedPreferences
 
@@ -122,4 +124,13 @@ object PrefManager {
             .filter { it > 0 }
         return if (list.isNotEmpty()) list else listOf(3, 5, 15, 30, 60)
     }
+
+    // ========== 每日累计时长自律上限与 AI 宏观审计 ==========
+    var dailyLimitMinutes: Int
+        get() = prefs.getInt(KEY_DAILY_LIMIT, 60)
+        set(value) = prefs.edit().putInt(KEY_DAILY_LIMIT, value).apply()
+
+    var aiMacroAuditEnabled: Boolean
+        get() = prefs.getBoolean(KEY_AI_MACRO_AUDIT, true)
+        set(value) = prefs.edit().putBoolean(KEY_AI_MACRO_AUDIT, value).apply()
 }

@@ -63,9 +63,39 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="14dp"
             android:background="@color/card_border" />
+
+        <!-- Today Usage & Fatigue Stats Card -->
+        <LinearLayout
+            android:id="@+id/layoutTodayStats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            android:background="#153B82F6"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <TextView
+                android:id="@+id/tvTodayStats"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📊 今日已用：0分钟 (共0次) | 自律限额 60分钟"
+                android:textColor="#93C5FD"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvTodayLimitAlert"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="⚠️ 今日自律额度已超标！AI 已启动熔断，常规娱乐理由一律驳回，仅接受紧急重大要事！"
+                android:textColor="#F87171"
+                android:textSize="11sp"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <!-- User Goal Input -->
         <TextView
@@ -116,6 +146,18 @@
                 android:text="理由过于敷衍，未说明具体事项，请重新输入！"
                 android:textColor="#FCA5A5"
                 android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnApplyEmergency"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/btn_secondary"
+                android:text="🚨 我确有突发紧急要事，申请紧急特批"
+                android:textAllCaps="false"
+                android:textColor="#F87171"
+                android:textSize="12sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <!-- Duration Selection -->
