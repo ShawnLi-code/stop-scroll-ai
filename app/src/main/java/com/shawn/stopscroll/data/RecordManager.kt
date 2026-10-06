@@ -178,4 +178,41 @@ object RecordManager {
     fun getTodaySummary(): DaySummary {
         return getDaySummary(getTodayDateString())
     }
+
+    /**
+     * 获取指定应用在指定日期的累计已用时长（分钟）
+     */
+    fun getAppTodayUsedMinutes(packageName: String, dateStr: String = getTodayDateString()): Int {
+        val db = dbHelper.readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT SUM($COL_DURATION) FROM $TABLE_NAME WHERE $COL_DATE = ? AND $COL_PACKAGE = ?",
+            arrayOf(dateStr, packageName)
+        )
+        cursor.use {
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(0)
+            }
+        }
+        return 0
+    }
+
+    /**
+     * 获取今日各受控应用的已消耗分钟数 Map
+     */
+    fun getTodayAppUsageMap(): Map<String, Int> {
+        val map = mutableMapOf<String, Int>()
+        val db = dbHelper.readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT $COL_PACKAGE, SUM($COL_DURATION) FROM $TABLE_NAME WHERE $COL_DATE = ? GROUP BY $COL_PACKAGE",
+            arrayOf(getTodayDateString())
+        )
+        cursor.use {
+            while (cursor.moveToNext()) {
+                val pkg = cursor.getString(0)
+                val sum = cursor.getInt(1)
+                map[pkg] = sum
+            }
+        }
+        return map
+    }
 }

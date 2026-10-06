@@ -1,23 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Modern Dark / High-end Theme -->
-    <color name="bg_dark">#0F172A</color>
-    <color name="card_bg">#1E293B</color>
-    <color name="card_border">#334155</color>
+    <!-- Ultra Sleek Dark Palette (Linear / Apple Dark Mode) -->
+    <color name="bg_dark">#090D16</color>
+    <color name="bg_surface">#101726</color>
+    <color name="card_bg">#141D2E</color>
+    <color name="card_bg_elevated">#1A253A</color>
+    <color name="card_border">#25334A</color>
+    <color name="card_border_highlight">#3B4E6F</color>
     
+    <!-- Modern Emerald & Teal Brand Colors -->
     <color name="primary">#10B981</color>
     <color name="primary_dark">#059669</color>
     <color name="primary_light">#D1FAE5</color>
+    <color name="primary_glow">#2010B981</color>
     
-    <color name="accent_blue">#3B82F6</color>
+    <!-- Vibrant Accents -->
+    <color name="indigo_accent">#6366F1</color>
+    <color name="indigo_glow">#206366F1</color>
+    <color name="accent_blue">#38BDF8</color>
+    <color name="accent_blue_glow">#2038BDF8</color>
+    <color name="purple_accent">#A855F7</color>
+    <color name="purple_glow">#20A855F7</color>
+    
+    <!-- Status & Alerts -->
     <color name="danger">#EF4444</color>
+    <color name="danger_glow">#20EF4444</color>
     <color name="warning">#F59E0B</color>
+    <color name="warning_glow">#20F59E0B</color>
     
+    <!-- High-Contrast Crisp Typography -->
     <color name="text_primary">#F8FAFC</color>
     <color name="text_secondary">#94A3B8</color>
     <color name="text_muted">#64748B</color>
-    <color name="divider">#1E293B</color>
+    <color name="divider">#1B263B</color>
     
     <color name="transparent">#00000000</color>
-    <color name="dialog_scrim">#B3000000</color>
+    <color name="dialog_scrim">#CC000000</color>
 </resources>

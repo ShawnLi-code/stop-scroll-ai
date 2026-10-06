@@ -217,13 +217,45 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 return
             }
 
-            // 4. 如果当前应用【没有合法 Session】，并且是【窗口打开切换事件】-> 触发意图拦截！
+            // 4. 如果当前应用【没有合法 Session】，并且是【窗口打开切换事件】-> 触发意图拦截或配额免审放行！
             if (!SessionManager.isSessionActiveFor(effectivePkg)) {
                 if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                     val now = System.currentTimeMillis()
                     // 防抖 1.5 秒
                     if (now - lastInterceptTime > 1500L) {
                         lastInterceptTime = now
+
+                        // 🌟 检查「配额内自由支配（免审直通）」模式：在预先规划好的时间内无需AI审核！
+                        if (PrefManager.quotaFastPassEnabled) {
+                            val todayStr = com.shawn.stopscroll.data.RecordManager.getTodayDateString()
+                            val appUsedToday = com.shawn.stopscroll.data.RecordManager.getAppTodayUsedMinutes(effectivePkg, todayStr)
+                            val appQuota = PrefManager.getAppDailyQuota(effectivePkg)
+                            val todaySummary = com.shawn.stopscroll.data.RecordManager.getDaySummary(todayStr)
+                            val totalUsed = todaySummary.totalMinutes
+                            val totalBudget = PrefManager.dailyLimitMinutes
+
+                            if (appUsedToday < appQuota && totalUsed < totalBudget) {
+                                val appRemain = appQuota - appUsedToday
+                                val totalRemain = totalBudget - totalUsed
+                                val chunkMinutes = minOf(appRemain, totalRemain, 15).coerceAtLeast(1)
+                                val appDisplayName = getAppName(effectivePkg)
+
+                                SessionManager.startSession(effectivePkg, "今日预分配预算自由支配", chunkMinutes)
+                                com.shawn.stopscroll.data.RecordManager.addRecord(
+                                    packageName = effectivePkg,
+                                    appName = appDisplayName,
+                                    userGoal = "每日规划配额自由使用",
+                                    durationMinutes = chunkMinutes
+                                )
+
+                                val leftApp = (appRemain - chunkMinutes).coerceAtLeast(0)
+                                val leftTotal = (totalRemain - chunkMinutes).coerceAtLeast(0)
+                                showToast("🟢 配额免审畅刷：【$appDisplayName】本次${chunkMinutes}分钟 (今日还剩${leftApp}分/总预算剩${leftTotal}分)")
+                                Log.i("StopScroll", "Fast-pass granted for $effectivePkg ($chunkMinutes min)")
+                                return
+                            }
+                        }
+
                         Log.i("StopScroll", "Intercepting target open: $effectivePkg")
                         interceptApp(effectivePkg)
                     }
@@ -329,6 +361,26 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 Toast.makeText(applicationContext, msg, Toast.LENGTH_LONG).show()
             } catch (e: Throwable) {
                 Log.e("StopScroll", "Toast error: ${e.message}")
+            }
+        }
+    }
+
+    private fun getAppName(pkg: String): String {
+        return when (pkg) {
+            "com.tencent.mm:finder" -> "微信视频号"
+            "com.tencent.mm:moments" -> "微信朋友圈"
+            "com.xingin.xhs" -> "小红书"
+            "com.ss.android.ugc.aweme" -> "抖音"
+            "tv.danmaku.bili" -> "哔哩哔哩"
+            "com.smile.gifmaker" -> "快手"
+            "com.sina.weibo" -> "微博"
+            "com.twitter.android" -> "Twitter (X)"
+            else -> try {
+                val pm = packageManager
+                val info = pm.getApplicationInfo(pkg, 0)
+                pm.getApplicationLabel(info).toString()
+            } catch (e: Exception) {
+                pkg
             }
         }
     }

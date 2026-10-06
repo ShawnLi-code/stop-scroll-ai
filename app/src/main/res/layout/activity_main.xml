@@ -10,33 +10,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp">
 
-        <!-- Top Title Bar -->
+        <!-- 1. Sleek Bento Top Bar -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingTop="12dp"
-            android:paddingBottom="16dp">
+            android:paddingTop="8dp"
+            android:paddingBottom="12dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🛡️"
-                android:textSize="32sp" />
+                android:textSize="28sp" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:letterSpacing="-0.02"
                     android:text="别刷了 AI"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp"
@@ -46,32 +47,47 @@
                     android:id="@+id/tvCurrentVersionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="AI 自律守护器 (v1.0.7 支持无损覆盖更新)"
+                    android:text="时间预算分配 &amp; AI 自律守护器"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>
 
+            <!-- iOS Guide Pill Button -->
             <Button
-                android:id="@+id/btnCheckUpdate"
+                android:id="@+id/btnIosGuide"
                 android:layout_width="wrap_content"
-                android:layout_height="34dp"
+                android:layout_height="36dp"
                 android:background="@drawable/btn_secondary"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
-                android:text="🔄 检查更新"
+                android:text="🍎 iOS指南"
                 android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <!-- Check Update Button -->
+            <Button
+                android:id="@+id/btnCheckUpdate"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/btn_secondary"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:text="🔄 更新"
+                android:textColor="@color/primary"
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- Today Usage Dashboard Card -->
+        <!-- 2. Hero Dashboard: 今日自律预算看板 (Bento Card) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/card_rounded"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/card_hero_gradient"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="18dp">
 
+            <!-- Top Row: Title + Status Pill -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -82,267 +98,160 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="📊 今日自律战报"
+                    android:letterSpacing="-0.01"
+                    android:text="⏱️ 今日时间预算看板"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tvMainTodayDate"
+                    android:id="@+id/tvBudgetStatusBadge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="今日"
-                    android:textColor="@color/text_muted"
-                    android:textSize="12sp" />
+                    android:background="@drawable/badge_pill"
+                    android:text="🟢 免审畅刷中"
+                    android:textColor="@color/primary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
+            <!-- Middle Big Metric Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <!-- Left: Big Remaining Time -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:background="#1510B981"
-                    android:orientation="vertical"
-                    android:padding="10dp">
+                    android:orientation="vertical">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="今日累计用时"
+                        android:text="今日可用余量"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:gravity="baseline"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tvRemainingMinutes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:letterSpacing="-0.03"
+                            android:text="90"
+                            android:textColor="@color/primary"
+                            android:textSize="32sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:text="分钟"
+                            android:textColor="@color/primary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="@color/card_border" />
+
+                <!-- Right: Used vs Total & Count -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/tvMainTodayDuration"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="0小时0分钟"
-                        android:textColor="@color/primary"
-                        android:textSize="18sp"
+                        android:text="今日已用: 0 分钟"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:background="#153B82F6"
-                    android:orientation="vertical"
-                    android:padding="10dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="打开受控应用"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
 
                     <TextView
                         android:id="@+id/tvMainTodayCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="0 次"
+                        android:layout_marginTop="3dp"
+                        android:text="打开次数: 0 次"
                         android:textColor="@color/accent_blue"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/btnOpenHistory"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/btn_secondary"
-                android:text="📈 查看完整历史与日期统计 (按月/按日)"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <!-- 1. System Permissions Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/card_rounded"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1. 系统必要权限配置"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="OPPO (ColorOS) 需全部开启以确保拦截生效"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="12dp"
-                android:background="@color/card_border" />
-
-            <!-- Accessibility Row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="无障碍辅助服务"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvAccessibilityStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="状态: 未开启 (点击去设置)"
-                        android:textColor="@color/danger"
                         android:textSize="12sp" />
-                </LinearLayout>
-
-                <Button
-                    android:id="@+id/btnOpenAccessibility"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:background="@drawable/btn_primary"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:text="去开启"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- Overlay Row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tvMainTodayDate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="悬浮窗权限"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvOverlayStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="状态: 未授权"
-                        android:textColor="@color/danger"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <Button
-                    android:id="@+id/btnOpenOverlay"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:background="@drawable/btn_secondary"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:text="去授权"
-                    android:textColor="@color/text_primary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- Battery Optimize Row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="电池白名单 (防杀后台)"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="允许应用在后台持续运行"
+                        android:layout_marginTop="2dp"
+                        android:text="总配额: 90 分钟"
                         android:textColor="@color/text_muted"
-                        android:textSize="12sp" />
+                        android:textSize="11sp" />
                 </LinearLayout>
+            </LinearLayout>
+
+            <!-- Budget Progress Bar -->
+            <ProgressBar
+                android:id="@+id/pbBudgetProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="14dp"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/progress_budget_drawable" />
+
+            <!-- Detail hint & History Jump -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvBudgetProgressDetail"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="未超标时享受自由畅刷，省心不费时"
+                    android:textColor="@color/text_muted"
+                    android:textSize="11sp" />
 
                 <Button
-                    android:id="@+id/btnBatteryIgnore"
+                    android:id="@+id/btnOpenHistory"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="32dp"
                     android:background="@drawable/btn_secondary"
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp"
-                    android:text="允许常驻"
+                    android:text="📈 历史战报"
                     android:textColor="@color/text_primary"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
-
-            <!-- Anti-kill hint -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="#15F59E0B"
-                android:lineSpacingMultiplier="1.2"
-                android:padding="10dp"
-                android:text="💡 防误划强杀建议：在 OPPO 多任务卡片界面长按或下拉【别刷了 AI】，点击【加锁】，这样清理后台时绝不会被误杀！"
-                android:textColor="@color/warning"
-                android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- 2. Night Curfew Mode Card -->
+        <!-- 3. NEW: 每日时间预算分配计划 Card (核心升级) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginBottom="14dp"
             android:background="@drawable/card_rounded"
             android:orientation="vertical"
             android:padding="16dp">
@@ -353,37 +262,31 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="2. 🌙 夜间防沉迷宵禁"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvCurfewSummary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="当前生效时段：23:00 - 06:00"
-                        android:textColor="@color/primary"
-                        android:textSize="12sp" />
-                </LinearLayout>
+                    android:text="1. 每日时间预算分配计划"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
                 <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchCurfew"
+                    android:id="@+id/switchQuotaFastPass"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true" />
             </LinearLayout>
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:lineSpacingMultiplier="1.2"
+                android:text="提前规划今日各应用可用额度。在规划时间内自由支配，免除每次繁琐审核；配额用尽后自动锁定并由 AI 严格卡关！"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -391,52 +294,521 @@
                 android:layout_marginBottom="12dp"
                 android:background="@color/card_border" />
 
+            <!-- Total Daily Budget Selector -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="全天健康总预算 (各应用可用总时长)："
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupDailyLimit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/limitChip30"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="30 分钟" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/limitChip60"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="60 分钟" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/limitChip90"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="90 分钟 (推荐)" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/limitChip120"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="120 分钟" />
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Custom Budget Input -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/btnCurfewStart"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="6dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/btn_secondary"
-                    android:text="开始: 23:00"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="或自定义总预算："
+                    android:textColor="@color/text_muted"
+                    android:textSize="12sp" />
+
+                <EditText
+                    android:id="@+id/etCustomDailyLimit"
+                    android:layout_width="90dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/edit_text_bg"
+                    android:gravity="center"
+                    android:hint="如 90"
+                    android:inputType="number"
+                    android:maxLength="4"
                     android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_muted"
                     android:textSize="13sp" />
 
-                <Button
-                    android:id="@+id/btnCurfewEnd"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/btn_secondary"
-                    android:text="结束: 06:00"
+                    android:text="分钟 / 天"
                     android:textColor="@color/text_primary"
                     android:textSize="13sp" />
             </LinearLayout>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/card_border" />
+
+            <!-- Per-App Quota Allocation List -->
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="分应用配额详情 (点击增减调整每日可用时长)："
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <!-- Row 1: 微信视频号 -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📺 微信视频号"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvUsedFinder"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="今日已用: 0 分钟"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnMinusFinder"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="-"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tvQuotaFinder"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="20 分钟"
+                    android:textColor="@color/primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnPlusFinder"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="+"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Row 2: 微信朋友圈 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📸 微信朋友圈"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvUsedMoments"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="今日已用: 0 分钟"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnMinusMoments"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="-"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tvQuotaMoments"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="15 分钟"
+                    android:textColor="@color/primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnPlusMoments"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="+"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Row 3: 小红书 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📕 小红书"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvUsedXhs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="今日已用: 0 分钟"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnMinusXhs"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="-"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tvQuotaXhs"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="25 分钟"
+                    android:textColor="@color/primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnPlusXhs"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="+"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Row 4: 抖音 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎵 抖音"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvUsedDouyin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="今日已用: 0 分钟"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnMinusDouyin"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="-"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tvQuotaDouyin"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="20 分钟"
+                    android:textColor="@color/primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnPlusDouyin"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="+"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Row 5: Twitter (X) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🐦 Twitter (X)"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvUsedTwitter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="今日已用: 0 分钟"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnMinusTwitter"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="-"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tvQuotaTwitter"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="10 分钟"
+                    android:textColor="@color/primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnPlusTwitter"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="+"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Row 6: Other Apps -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📱 其他自选应用"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvUsedOther"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="今日已用: 0 分钟"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnMinusOther"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="-"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tvQuotaOther"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="15 分钟"
+                    android:textColor="@color/primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnPlusOther"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="+"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Allocation Summary Footer -->
+            <TextView
+                android:id="@+id/tvQuotaSumSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
                 android:background="#1510B981"
-                android:lineSpacingMultiplier="1.2"
                 android:padding="10dp"
-                android:text="🔒 宵禁效果：在晚上 11 点 (23:00) 之后打开抖音、快手、小红书等短视频时，将直接全屏弹出作息提示并强制退出，不允许进入！"
+                android:text="💡 已分配配额总和：105 分钟 / 每日总预算 90 分钟"
                 android:textColor="@color/primary"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <!-- AI Macro Audit Switch -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🧠 预算用尽后启动 AI 熔断审查"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="当预算耗尽后强行卡关，仅限突发紧急要事破例放行"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchAiMacroAudit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true" />
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- 3. Duration Control Card -->
+        <!-- 4. 单次专注切片时长 Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginBottom="14dp"
             android:background="@drawable/card_rounded"
             android:orientation="vertical"
             android:padding="16dp">
@@ -444,7 +816,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="3. ⏱️ 单次使用时长设置"
+                android:text="2. 单次专注提醒切片"
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -453,24 +825,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="设置进入短视频后的默认倒计时时长 (到点即强制踢出)"
+                android:text="每次进入应用后进行主动倒计时，到时主动提醒放下手机："
                 android:textColor="@color/text_muted"
                 android:textSize="12sp" />
-
-            <!-- Default Duration Selector -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="预设默认时长 (打开拦截弹窗时自动选中)："
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupMainDuration"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="8dp"
                 app:singleSelection="true">
 
                 <com.google.android.material.chip.Chip
@@ -492,6 +855,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Choice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:checked="true"
                     android:text="15 分钟" />
 
                 <com.google.android.material.chip.Chip
@@ -510,14 +874,6 @@
             </com.google.android.material.chip.ChipGroup>
 
             <!-- Custom Minutes Input -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="或自定义默认时长 (支持 60 分钟 / 1 小时)："
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -525,68 +881,62 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="或自定义单次切片："
+                    android:textColor="@color/text_muted"
+                    android:textSize="12sp" />
+
                 <EditText
                     android:id="@+id/etMainDefaultMinutes"
-                    android:layout_width="120dp"
-                    android:layout_height="40dp"
+                    android:layout_width="90dp"
+                    android:layout_height="36dp"
                     android:background="@drawable/edit_text_bg"
                     android:gravity="center"
-                    android:hint="输入分钟 (如 60)"
+                    android:hint="如 15"
                     android:inputType="number"
                     android:maxLength="4"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_muted"
-                    android:textSize="14sp" />
+                    android:textSize="13sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="6dp"
                     android:text="分钟"
                     android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
+                    android:textSize="13sp" />
             </LinearLayout>
+        </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="14dp"
-                android:background="@color/card_border" />
+        <!-- 5. 夜间防沉迷作息宵禁 Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <!-- 每日累计使用上限与 AI 熔断预警 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🧠 AI 每日自律决策与熔断监控"
-                        android:textColor="@color/text_primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:lineSpacingMultiplier="1.2"
-                        android:text="AI 根据今日累计时长、打开频次与理由综合判断是否能继续刷。超额时坚决熔断，仅紧急要事可破例！"
-                        android:textColor="@color/text_muted"
-                        android:textSize="12sp" />
-                </LinearLayout>
+                    android:text="3. 夜间防沉迷作息宵禁 🌙"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
                 <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchAiMacroAudit"
+                    android:id="@+id/switchCurfew"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true" />
@@ -595,83 +945,66 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="每日累计健康上限 (达到后常规理由一律驳回)："
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:layout_marginTop="4dp"
+                android:text="宵禁时段内全面刚性死锁，杜绝深夜刷到凌晨1点破戒！"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupDailyLimit"
+            <TextView
+                android:id="@+id/tvCurfewSummary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                app:singleSelection="true">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/limitChip30"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="30 分钟" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/limitChip60"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="60 分钟 (1小时)" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/limitChip90"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="90 分钟 (1.5小时)" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/limitChip120"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="120 分钟 (2小时)" />
-            </com.google.android.material.chip.ChipGroup>
+                android:layout_marginTop="10dp"
+                android:background="#15F59E0B"
+                android:padding="10dp"
+                android:text="当前生效时段：23:00 至 06:00 强制禁止短视频"
+                android:textColor="@color/warning"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="12dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/etCustomDailyLimit"
-                    android:layout_width="120dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/edit_text_bg"
-                    android:gravity="center"
-                    android:hint="自定义分钟"
-                    android:inputType="number"
-                    android:maxLength="4"
+                <Button
+                    android:id="@+id/btnCurfewStart"
+                    android:layout_width="0dp"
+                    android:layout_height="38dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_secondary"
+                    android:text="开始: 23:00"
                     android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_muted"
-                    android:textSize="14sp" />
+                    android:textSize="13sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="分钟 / 每天"
+                    android:layout_marginEnd="8dp"
+                    android:text="至"
+                    android:textColor="@color/text_muted"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/btnCurfewEnd"
+                    android:layout_width="0dp"
+                    android:layout_height="38dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_secondary"
+                    android:text="结束: 06:00"
                     android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
+                    android:textSize="13sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 4. Monitored Target Apps -->
+        <!-- 6. 监控的目标应用与微信子功能 Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginBottom="14dp"
             android:background="@drawable/card_rounded"
             android:orientation="vertical"
             android:padding="16dp">
@@ -684,7 +1017,6 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <!-- Live Status Banner -->
             <TextView
                 android:id="@+id/tvMonitoredSummary"
                 android:layout_width="match_parent"
@@ -695,7 +1027,7 @@
                 android:padding="10dp"
                 android:text="当前已受控：微信视频号、朋友圈、小红书、抖音等"
                 android:textColor="@color/primary"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <!-- 微信子功能专属拦截 -->
@@ -714,7 +1046,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:checked="true"
-                android:text="📺 微信视频号 (进视频号时拦截，不影响微信聊天)"
+                android:text="📺 微信视频号 (进视频号时管控，不影响微信聊天)"
                 android:textColor="@color/text_primary" />
 
             <CheckBox
@@ -722,14 +1054,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="📸 微信朋友圈 (刷朋友圈时拦截，不影响日常收发消息)"
+                android:text="📸 微信朋友圈 (刷朋友圈时管控，不影响日常收发消息)"
                 android:textColor="@color/text_primary" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
                 android:background="@color/card_border" />
 
             <TextView
@@ -760,7 +1092,6 @@
                 android:id="@+id/cbBilibili"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:checked="true"
                 android:text="哔哩哔哩 (tv.danmaku.bili)"
                 android:textColor="@color/text_primary" />
 
@@ -798,9 +1129,9 @@
                 android:id="@+id/btnSelectCustomApps"
                 android:layout_width="match_parent"
                 android:layout_height="42dp"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/btn_secondary"
-                android:text="➕ 从手机中选择更多已安装应用 (推特/游戏/知乎等)"
+                android:text="➕ 从手机中选择更多已安装应用 (游戏/资讯等)"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp" />
 
@@ -809,7 +1140,7 @@
                 android:id="@+id/tvCustomAppsHint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="10dp"
                 android:text="已自定义添加的其他手机应用："
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
@@ -822,11 +1153,11 @@
                 android:layout_marginTop="6dp" />
         </LinearLayout>
 
-        <!-- 5. AI Model Settings Card -->
+        <!-- 7. AI Model Settings Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginBottom="14dp"
             android:background="@drawable/card_rounded"
             android:orientation="vertical"
             android:padding="16dp">
@@ -834,7 +1165,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="5. AI 屏幕内容监护 (选配功能)"
+                android:text="5. AI 自律教练与大模型配置"
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -843,154 +1174,289 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="不配置也可正常使用「意图阻断 + 到点强制踢出」"
+                android:text="国内永久免费模型一键载入，不花一分钱："
                 android:textColor="@color/text_muted"
                 android:textSize="12sp" />
 
-            <!-- Free Models Presets -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="🎁 免费模型一键配置 (点击快速填入)："
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
+            <!-- AI Model Presets Chips -->
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupAiPresets"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp">
+                android:layout_marginTop="8dp"
+                app:singleSelection="true">
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipPresetZhipu"
                     style="@style/Widget.MaterialComponents.Chip.Action"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🌟 智谱 GLM-4-Flash (国内永久免费·推荐)" />
+                    android:text="🌟 智谱 GLM-4-Flash (永久免费)"
+                    android:textColor="@color/primary" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipPresetSilicon"
                     style="@style/Widget.MaterialComponents.Chip.Action"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="⚡ 硅基流动 Qwen2.5 (免费专区)" />
+                    android:text="⚡ 硅基流动 Qwen2.5 (免费)" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipPresetGemini"
                     style="@style/Widget.MaterialComponents.Chip.Action"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🚀 Google Gemini Flash (官方免费)" />
+                    android:text="🚀 Google Gemini 1.5 Flash" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipPresetDeepseek"
                     style="@style/Widget.MaterialComponents.Chip.Action"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🧠 DeepSeek-V3" />
+                    android:text="🤖 DeepSeek 官方" />
             </com.google.android.material.chip.ChipGroup>
 
-            <!-- Free Model Guide Tip -->
             <TextView
                 android:id="@+id/tvAiPresetGuide"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="#153B82F6"
+                android:layout_marginTop="6dp"
+                android:background="#1510B981"
                 android:lineSpacingMultiplier="1.2"
-                android:padding="10dp"
-                android:text="💡 推荐方案：点击【智谱 GLM-4-Flash】永久免费！\n国内直连无需梯子，延迟仅200ms。微信扫码登录 open.bigmodel.cn 复制免费 API Key 粘贴即可，0元无费用。"
-                android:textColor="#93C5FD"
-                android:textSize="12sp" />
+                android:padding="8dp"
+                android:text="💡 推荐使用【智谱 GLM-4-Flash】：国内高速直连无需梯子，永久免费0费用！"
+                android:textColor="@color/primary"
+                android:textSize="11sp" />
 
-            <!-- API Key -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="API Key:"
+                android:layout_marginTop="10dp"
+                android:text="API Key (密钥)："
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:textSize="12sp" />
 
             <EditText
                 android:id="@+id/etApiKey"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="4dp"
                 android:background="@drawable/edit_text_bg"
-                android:hint="sk-xxxxxxxx (留空则不开启AI屏幕文字分析)"
+                android:hint="填入你的大模型 API Key"
                 android:inputType="textPassword"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_muted"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
 
-            <!-- Base URL -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="API Base URL:"
+                android:layout_marginTop="10dp"
+                android:text="Base URL："
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:textSize="12sp" />
 
             <EditText
                 android:id="@+id/etBaseUrl"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="4dp"
                 android:background="@drawable/edit_text_bg"
-                android:hint="https://api.deepseek.com/v1"
-                android:text="https://api.deepseek.com/v1"
+                android:text="https://open.bigmodel.cn/api/paas/v4"
                 android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_muted"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
 
-            <!-- Model Name -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="模型名称 (Model):"
+                android:layout_marginTop="10dp"
+                android:text="模型名称 (Model)："
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:textSize="12sp" />
 
             <EditText
                 android:id="@+id/etModelName"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/edit_text_bg"
-                android:hint="deepseek-chat"
-                android:text="deepseek-chat"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_muted"
-                android:textSize="14sp" />
-
-            <Button
-                android:id="@+id/btnTestAi"
-                android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/btn_secondary"
-                android:text="测试 AI 接口连通性"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/edit_text_bg"
+                android:text="glm-4-flash"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <!-- Global Save Button -->
+        <!-- 8. 系统必要权限 Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="6. 系统必要权限配置"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="手机需全部开启以确保时间管控稳定生效"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/card_border" />
+
+            <!-- Accessibility Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="无障碍辅助服务"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvAccessibilityStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="状态: 未开启"
+                        android:textColor="@color/danger"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnOpenAccessibility"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:background="@drawable/btn_primary"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:text="去开启"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Overlay Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="悬浮窗权限"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvOverlayStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="状态: 未授权"
+                        android:textColor="@color/danger"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnOpenOverlay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:background="@drawable/btn_secondary"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:text="去授权"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Battery Optimize Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="后台电池白名单"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="防止后台服务被系统杀死"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnBatteryIgnore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:background="@drawable/btn_secondary"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:text="去加白"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 9. Global Save Button -->
         <Button
             android:id="@+id/btnSaveAll"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="32dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="24dp"
             android:background="@drawable/btn_primary"
-            android:text="💾 保存并应用全部自律设置"
+            android:text="💾 保存今日预算分配与自律配置"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
     </LinearLayout>

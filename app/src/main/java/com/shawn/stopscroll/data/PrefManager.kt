@@ -127,10 +127,37 @@ object PrefManager {
 
     // ========== 每日累计时长自律上限与 AI 宏观审计 ==========
     var dailyLimitMinutes: Int
-        get() = prefs.getInt(KEY_DAILY_LIMIT, 60)
+        get() = prefs.getInt(KEY_DAILY_LIMIT, 90)
         set(value) = prefs.edit().putInt(KEY_DAILY_LIMIT, value).apply()
 
     var aiMacroAuditEnabled: Boolean
         get() = prefs.getBoolean(KEY_AI_MACRO_AUDIT, true)
         set(value) = prefs.edit().putBoolean(KEY_AI_MACRO_AUDIT, value).apply()
+
+    // ========== 每日时间预算分配计划 (Time Budget Planner) ==========
+    private const val KEY_QUOTA_FAST_PASS = "quota_fast_pass_enabled"
+    private const val PREF_APP_QUOTAS_PREFIX = "app_quota_"
+
+    var quotaFastPassEnabled: Boolean
+        get() = prefs.getBoolean(KEY_QUOTA_FAST_PASS, true)
+        set(value) = prefs.edit().putBoolean(KEY_QUOTA_FAST_PASS, value).apply()
+
+    fun getAppDailyQuota(packageName: String): Int {
+        val defaultVal = when (packageName) {
+            "com.xingin.xhs" -> 25
+            "com.ss.android.ugc.aweme" -> 20
+            "com.tencent.mm:finder" -> 20
+            "com.tencent.mm:moments" -> 15
+            "com.twitter.android" -> 10
+            "tv.danmaku.bili" -> 20
+            "com.smile.gifmaker" -> 15
+            "com.sina.weibo" -> 15
+            else -> 15
+        }
+        return prefs.getInt(PREF_APP_QUOTAS_PREFIX + packageName, defaultVal)
+    }
+
+    fun setAppDailyQuota(packageName: String, minutes: Int) {
+        prefs.edit().putInt(PREF_APP_QUOTAS_PREFIX + packageName, minutes.coerceAtLeast(1)).apply()
+    }
 }

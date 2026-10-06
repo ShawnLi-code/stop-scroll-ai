@@ -51,7 +51,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        // 0. Today Usage Dashboard
+        try {
+            val verName = packageManager.getPackageInfo(packageName, 0).versionName ?: "1.2.0"
+            binding.tvCurrentVersionTitle.text = "v$verName · 时间预算分配 & AI 自律守护"
+        } catch (_: Exception) {}
+
+        // 0. Quota Fast Pass & Dashboard
+        binding.switchQuotaFastPass.isChecked = PrefManager.quotaFastPassEnabled
+        updateQuotaDisplay()
         updateTodayUsageDashboard()
 
         // 1. Curfew Views
@@ -107,6 +114,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initListeners() {
+        // iOS Guide Dialog
+        binding.btnIosGuide.setOnClickListener {
+            showIosGuideDialog()
+        }
+
+        // Quota Fast Pass Switch
+        binding.switchQuotaFastPass.setOnCheckedChangeListener { _, isChecked ->
+            PrefManager.quotaFastPassEnabled = isChecked
+            updateTodayUsageDashboard()
+            val tip = if (isChecked) "已开启配额内免审自由畅刷（省心免审核）" else "已关闭免审（每次开启均需说明事由）"
+            Toast.makeText(this, tip, Toast.LENGTH_SHORT).show()
+        }
+
+        // Per-App Quota +/- Listeners
+        binding.btnMinusFinder.setOnClickListener { adjustQuota("com.tencent.mm:finder", -5) }
+        binding.btnPlusFinder.setOnClickListener { adjustQuota("com.tencent.mm:finder", 5) }
+
+        binding.btnMinusMoments.setOnClickListener { adjustQuota("com.tencent.mm:moments", -5) }
+        binding.btnPlusMoments.setOnClickListener { adjustQuota("com.tencent.mm:moments", 5) }
+
+        binding.btnMinusXhs.setOnClickListener { adjustQuota("com.xingin.xhs", -5) }
+        binding.btnPlusXhs.setOnClickListener { adjustQuota("com.xingin.xhs", 5) }
+
+        binding.btnMinusDouyin.setOnClickListener { adjustQuota("com.ss.android.ugc.aweme", -5) }
+        binding.btnPlusDouyin.setOnClickListener { adjustQuota("com.ss.android.ugc.aweme", 5) }
+
+        binding.btnMinusTwitter.setOnClickListener { adjustQuota("com.twitter.android", -5) }
+        binding.btnPlusTwitter.setOnClickListener { adjustQuota("com.twitter.android", 5) }
+
+        binding.btnMinusOther.setOnClickListener { adjustQuota("other", -5) }
+        binding.btnPlusOther.setOnClickListener { adjustQuota("other", 5) }
+
         // Permission jumps
         binding.btnOpenAccessibility.setOnClickListener {
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
@@ -254,11 +293,13 @@ class MainActivity : AppCompatActivity() {
                     binding.limitChip60.id -> 60
                     binding.limitChip90.id -> 90
                     binding.limitChip120.id -> 120
-                    else -> 60
+                    else -> 90
                 }
                 PrefManager.dailyLimitMinutes = limit
                 val desc = if (limit >= 60 && limit % 60 == 0) "${limit / 60}小时" else "${limit}分钟"
-                Toast.makeText(this, "🎯 每日自律上限已设为: $desc", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "🎯 每日健康总预算已设为: $desc", Toast.LENGTH_SHORT).show()
+                updateTodayUsageDashboard()
+                updateQuotaSumSummary()
             }
         }
 
@@ -267,6 +308,19 @@ class MainActivity : AppCompatActivity() {
                 binding.chipGroupDailyLimit.clearCheck()
             }
         }
+
+        binding.etCustomDailyLimit.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val input = s?.toString()?.trim()?.toIntOrNull()
+                if (input != null && input > 0) {
+                    PrefManager.dailyLimitMinutes = input
+                    updateTodayUsageDashboard()
+                    updateQuotaSumSummary()
+                }
+            }
+        })
 
         // 🎁 免费模型一键预设监听
         binding.chipPresetZhipu.setOnClickListener {
@@ -522,10 +576,95 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateTodayUsageDashboard() {
         val today = com.shawn.stopscroll.data.RecordManager.getTodayDateString()
-        binding.tvMainTodayDate.text = today
         val summary = com.shawn.stopscroll.data.RecordManager.getTodaySummary()
-        binding.tvMainTodayDuration.text = summary.formattedDuration
-        binding.tvMainTodayCount.text = "${summary.count} 次"
+        val totalUsed = summary.totalMinutes
+        val totalBudget = PrefManager.dailyLimitMinutes
+        val remMinutes = (totalBudget - totalUsed).coerceAtLeast(0)
+
+        binding.tvRemainingMinutes.text = remMinutes.toString()
+        binding.tvMainTodayDuration.text = "今日已用: $totalUsed 分钟"
+        binding.tvMainTodayCount.text = "打开次数: ${summary.count} 次"
+        binding.tvMainTodayDate.text = "全天总预算: $totalBudget 分钟"
+
+        val percent = if (totalBudget > 0) ((totalUsed.toFloat() / totalBudget.toFloat()) * 100).toInt().coerceIn(0, 100) else 0
+        binding.pbBudgetProgress.progress = percent
+
+        if (remMinutes > 0 && PrefManager.quotaFastPassEnabled) {
+            binding.tvBudgetStatusBadge.text = "🟢 免审畅刷中"
+            binding.tvBudgetStatusBadge.setTextColor(getColor(R.color.primary))
+            binding.tvBudgetProgressDetail.text = "已使用 $totalUsed / $totalBudget 分钟，配额内自由支配，无需每次审核"
+        } else if (remMinutes == 0) {
+            binding.tvBudgetStatusBadge.text = "🔴 预算已耗尽 (AI熔断)"
+            binding.tvBudgetStatusBadge.setTextColor(getColor(R.color.danger))
+            binding.tvBudgetProgressDetail.text = "今日总时间预算已全部用尽，进入 AI 刚性卡关与夜间作息保护"
+        } else {
+            binding.tvBudgetStatusBadge.text = "🛡️ 每次开启需审核"
+            binding.tvBudgetStatusBadge.setTextColor(getColor(R.color.accent_blue))
+            binding.tvBudgetProgressDetail.text = "已关闭配额免审，单次开启需说明事由"
+        }
+
+        // 更新各应用已用时长统计
+        binding.tvUsedFinder.text = "今日已用: ${com.shawn.stopscroll.data.RecordManager.getAppTodayUsedMinutes("com.tencent.mm:finder", today)} 分钟"
+        binding.tvUsedMoments.text = "今日已用: ${com.shawn.stopscroll.data.RecordManager.getAppTodayUsedMinutes("com.tencent.mm:moments", today)} 分钟"
+        binding.tvUsedXhs.text = "今日已用: ${com.shawn.stopscroll.data.RecordManager.getAppTodayUsedMinutes("com.xingin.xhs", today)} 分钟"
+        binding.tvUsedDouyin.text = "今日已用: ${com.shawn.stopscroll.data.RecordManager.getAppTodayUsedMinutes("com.ss.android.ugc.aweme", today)} 分钟"
+        binding.tvUsedTwitter.text = "今日已用: ${com.shawn.stopscroll.data.RecordManager.getAppTodayUsedMinutes("com.twitter.android", today)} 分钟"
+        binding.tvUsedOther.text = "今日已用: ${com.shawn.stopscroll.data.RecordManager.getAppTodayUsedMinutes("other", today)} 分钟"
+    }
+
+    private fun adjustQuota(packageName: String, delta: Int) {
+        val current = PrefManager.getAppDailyQuota(packageName)
+        val newQuota = (current + delta).coerceAtLeast(5)
+        PrefManager.setAppDailyQuota(packageName, newQuota)
+        updateQuotaDisplay()
+        updateTodayUsageDashboard()
+    }
+
+    private fun updateQuotaDisplay() {
+        binding.tvQuotaFinder.text = "${PrefManager.getAppDailyQuota("com.tencent.mm:finder")} 分钟"
+        binding.tvQuotaMoments.text = "${PrefManager.getAppDailyQuota("com.tencent.mm:moments")} 分钟"
+        binding.tvQuotaXhs.text = "${PrefManager.getAppDailyQuota("com.xingin.xhs")} 分钟"
+        binding.tvQuotaDouyin.text = "${PrefManager.getAppDailyQuota("com.ss.android.ugc.aweme")} 分钟"
+        binding.tvQuotaTwitter.text = "${PrefManager.getAppDailyQuota("com.twitter.android")} 分钟"
+        binding.tvQuotaOther.text = "${PrefManager.getAppDailyQuota("other")} 分钟"
+        updateQuotaSumSummary()
+    }
+
+    private fun updateQuotaSumSummary() {
+        val totalAppQuota = PrefManager.getAppDailyQuota("com.tencent.mm:finder") +
+                PrefManager.getAppDailyQuota("com.tencent.mm:moments") +
+                PrefManager.getAppDailyQuota("com.xingin.xhs") +
+                PrefManager.getAppDailyQuota("com.ss.android.ugc.aweme") +
+                PrefManager.getAppDailyQuota("com.twitter.android") +
+                PrefManager.getAppDailyQuota("other")
+        val totalBudget = PrefManager.dailyLimitMinutes
+        binding.tvQuotaSumSummary.text = "💡 各应用规划配额总和：${totalAppQuota} 分钟 / 每日健康总预算 ${totalBudget} 分钟"
+    }
+
+    private fun showIosGuideDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("🍎 苹果手机 (iPhone) 自律设置指南")
+            .setMessage(
+                "iPhone 系统因沙盒安全限制无法直接安装安卓无障碍 APK，但 iOS 自带了非常强大且原生完善的【屏幕使用时间】与【App 限额】功能，可完美实现你所构想的【90分钟健康总预算 + 免审自律支配 + 超时硬核阻止】：\n\n" +
+                "1️⃣ 设置每日 90 分钟总预算 (App 限额)\n" +
+                "• 打开 iPhone【设置】➔【屏幕使用时间】➔ 开启功能。\n" +
+                "• 点击【App 限额】➔【添加限额】。\n" +
+                "• 勾选【社交】（微信/小红书/微博）和【娱乐】（抖音/B站）类别。\n" +
+                "• 将每日时长设置为【1小时30分钟】（支持自定每天不同时长）。\n" +
+                "• ⚠️ 关键开关：务必勾选【达到限额时阻止】！\n\n" +
+                "2️⃣ 刚性锁定防破戒 (防沉迷核心秘诀)\n" +
+                "• 在【屏幕使用时间】页面底部，点击【为屏幕使用时间设置密码】。\n" +
+                "• 请伴侣、好友或家人设置密码，或随机生成一个写在纸条上收起来。\n" +
+                "• 这样 90 分钟额度用完后，iPhone 将硬性锁死对应 App，无法轻率点击“再使用15分钟”！\n\n" +
+                "3️⃣ 微信视频号与朋友圈独立屏蔽\n" +
+                "• 打开 iPhone 微信 ➔【我】➔【设置】➔【通用】➔【发现页管理】。\n" +
+                "• 将【视频号】和【朋友圈】直接关闭入口！\n" +
+                "• 微信保留正常办公打字通话，彻底根除信息流红点与沉迷诱惑。\n\n" +
+                "4️⃣ 快捷指令进阶提醒 (可选)\n" +
+                "• 打开 iPhone【快捷指令】➔【自动化】➔ 创建“打开应用时”触发自律提醒通知。"
+            )
+            .setPositiveButton("知道了，非常清晰！", null)
+            .show()
     }
 
     private fun setupCheckboxListener(cb: CheckBox, pkg: String, name: String) {
@@ -710,6 +849,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveAllConfig() {
+        PrefManager.quotaFastPassEnabled = binding.switchQuotaFastPass.isChecked
         PrefManager.curfewEnabled = binding.switchCurfew.isChecked
         PrefManager.wechatFinderEnabled = binding.cbWechatFinder.isChecked
         PrefManager.wechatMomentsEnabled = binding.cbWechatMoments.isChecked
