@@ -36,23 +36,44 @@ object UpdateManager {
     private val gson = Gson()
 
     /**
-     * 检查 GitHub 最新发布的正式版本
+     * 检查 GitHub 最新发布的正式版本（强制禁用 CDN 与本地缓存）
      */
     suspend fun checkLatestVersion(currentVersionName: String): Result<VersionInfo> = withContext(Dispatchers.IO) {
         try {
+            val timestamp = System.currentTimeMillis()
             val request = Request.Builder()
-                .url(GITHUB_LATEST_API)
+                .url("$GITHUB_LATEST_API?_t=$timestamp")
                 .addHeader("Accept", "application/vnd.github.v3+json")
+                .addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+                .addHeader("Pragma", "no-cache")
                 .get()
                 .build()
 
+            var jsonObj: JsonObject? = null
             val response = client.newCall(request).execute()
-            if (!response.isSuccessful) {
-                return@withContext Result.failure(Exception("HTTP ${response.code}: 无法连接到 GitHub 检查更新"))
+            if (response.isSuccessful) {
+                val body = response.body?.string() ?: ""
+                jsonObj = gson.fromJson(body, JsonObject::class.java)
+            } else {
+                // 如果 /releases/latest 返回异常，尝试备用 /releases?per_page=1 列表接口
+                val fallbackReq = Request.Builder()
+                    .url("https://api.github.com/repos/$GITHUB_REPO/releases?per_page=1&_t=$timestamp")
+                    .addHeader("Accept", "application/vnd.github.v3+json")
+                    .addHeader("Cache-Control", "no-cache")
+                    .get()
+                    .build()
+                val fallbackResp = client.newCall(fallbackReq).execute()
+                if (fallbackResp.isSuccessful) {
+                    val arr = gson.fromJson(fallbackResp.body?.string() ?: "", com.google.gson.JsonArray::class.java)
+                    if (arr != null && arr.size() > 0) {
+                        jsonObj = arr.get(0).asJsonObject
+                    }
+                }
             }
 
-            val body = response.body?.string() ?: ""
-            val jsonObj = gson.fromJson(body, JsonObject::class.java)
+            if (jsonObj == null) {
+                return@withContext Result.failure(Exception("无法连接到 GitHub 检查更新，请检查网络！"))
+            }
 
             val tagName = jsonObj.get("tag_name")?.asString ?: ""
             val releaseNotes = jsonObj.get("body")?.asString ?: "优化了使用体验与系统稳定性"
@@ -73,7 +94,7 @@ object UpdateManager {
 
             // 如果 assets 没取到，使用 tag 默认地址
             if (downloadUrl.isBlank() && tagName.isNotBlank()) {
-                downloadUrl = "https://github.com/$GITHUB_REPO/releases/download/$tagName/StopScrollAI-$tagName.apk"
+                downloadUrl = "https://github.com/$GITHUB_REPO/releases/download/$tagName/FocusFlow-$tagName.apk"
             }
 
             val remoteVersion = tagName.removePrefix("v").trim()
@@ -131,6 +152,9 @@ object UpdateManager {
             var apkFile: File? = null
             var downloadSuccess = false
 
+            // 使用版本专属的独立文件名，防止系统安装器读取旧版本缓存
+            val safeFileName = "update_${downloadUrl.substringAfterLast('/').substringBeforeLast('.')}_${System.currentTimeMillis()}.apk"
+
             for (targetUrl in urlsToTry) {
                 try {
                     val request = Request.Builder().url(targetUrl).get().build()
@@ -139,7 +163,7 @@ object UpdateManager {
                         val body = response.body
                         if (body != null) {
                             val contentLength = body.contentLength()
-                            val destFile = File(activity.cacheDir, "update_stopscroll.apk")
+                            val destFile = File(activity.cacheDir, safeFileName)
                             if (destFile.exists()) destFile.delete()
 
                             body.byteStream().use { input ->
