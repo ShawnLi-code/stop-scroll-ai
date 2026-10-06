@@ -34,39 +34,44 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release_output
-          cp app/build/outputs/apk/release/app-release.apk release_output/FocusFlow-v1.2.1.apk
-          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.2.1.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/FocusFlow-v1.2.2.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.2.2.apk
           ls -lh release_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FocusFlow-v1.2.1-APK
-          path: release_output/FocusFlow-v1.2.1.apk
+          name: FocusFlow-v1.2.2-APK
+          path: release_output/FocusFlow-v1.2.2.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.1
-          name: 定心 (FocusFlow) v1.2.1 (全品牌升级更名「定心」+ 极光心流环内外全息Logo同步 + 视觉对比度优化)
+          tag_name: v1.2.2
+          name: 定心 (FocusFlow) v1.2.2 (真实前台活跃时长精准结算 + 息屏/退出即结算停止后台计时 + 极光心流环)
           body: |
-            ### 🌟 定心 (FocusFlow) v1.2.1 品牌与视觉焕新发布
+            ### 🌟 定心 (FocusFlow) v1.2.2 重磅更新与 Bug 深度修复
 
-            #### 核心焕新内容：
-            1. **✨ 正式更名为「定心」(FocusFlow)**：
-               - 告别生硬负向的“别刷了”，升级为充满禅意、专注与从容的「定心」；
-               - 寓意心定神闲、掌控自我，抵御短视频信息流的浮躁与喧嚣。
-            2. **🪐 全新极光心流环 (Zen Flow Ring) Logo，内外界面完全同步**：
+            #### 核心修复与升级：
+            1. **⏱️ 真实前台活跃时长精准结算（彻底杜绝后台幽灵计时与额度虚扣）**：
+               - **痛点解决**：彻底解决“打开小红书用2分钟退出后，后台还在继续算满5分钟/15分钟”的重大 Bug；
+               - **退出毫秒级停表**：当用户按 Home 键切回桌面、离开受控应用、或切换到其他 App 时，无障碍引擎立即感知识别，**瞬间结算实际使用分钟**并**强行销毁后台定时器**；
+               - **锁屏息屏即结算**：用户锁屏/息屏（电源键）时，广播监听立即触发结算，后台 0 毫秒偷跑；
+               - **不再预先扣费**：无论是 AI 审核进入还是免审配额直通，完全废除提前记入全额时间，全部改为**离场或用尽时按实结算**；
+               - **误触秒关智能豁免**：打开应用不足 25 秒（如误触、手滑秒关），自动按 0 分钟结算，完全不消耗每日宝贵自律额度！
+            2. **✨ 品牌全维升级为「定心」(FocusFlow)**：
+               - 告别负向生硬的旧名称，寓意心定神闲、掌控自我，抵御短视频信息流的浮躁与喧嚣。
+            3. **🪐 全新极光心流环 (Zen Flow Ring) Logo，内外界面完全同步**：
                - 手机桌面图标：采用翡翠绿与电光紫双弧旋流、内嵌清亮微星与四芒聚光核心，极简高级；
                - 应用内部顶栏与拦截面板：全面同步嵌入该矢量心流徽标，彻底告别粗糙纯黑与生硬 emoji！
-            3. **👀 按钮与卡片高对比度视觉修复**：
+            4. **👀 按钮与卡片高对比度视觉优化**：
                - 针对“检查更新”按钮在暗底绿框上字色偏暗的问题，全面优化为高清晰度明亮白字，清晰醒目；
                - 优化配额总和与模型推荐说明的文本对比度，全场景保证高可读性。
-            4. **⏱️ 90分钟健康总预算 & 分应用规划自由支配 (配额内免审畅刷)**；
-            5. **🍎 苹果手机 (iPhone) 原生自律与防沉迷设置指南**；
-            6. **🔑 永久固定签名证书，支持应用内一键无损覆盖更新（API Key、历史数据与系统权限 100% 完整保留）**！
+            5. **⏱️ 90分钟健康总预算 & 分应用规划自由支配 (配额内免审畅刷)**；
+            6. **🍎 苹果手机 (iPhone) 原生自律与防沉迷设置指南**；
+            7. **🔑 永久固定签名证书，支持应用内一键无损覆盖更新（API Key、历史数据与系统权限 100% 完整保留）**！
           files: |
-            release_output/FocusFlow-v1.2.1.apk
-            release_output/StopScrollAI-v1.2.1.apk
+            release_output/FocusFlow-v1.2.2.apk
+            release_output/StopScrollAI-v1.2.2.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

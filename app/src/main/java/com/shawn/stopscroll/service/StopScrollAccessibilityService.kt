@@ -1,8 +1,10 @@
 package com.shawn.stopscroll.service
 
 import android.accessibilityservice.AccessibilityService
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -12,6 +14,7 @@ import android.os.VibratorManager
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.shawn.stopscroll.InterceptDialogActivity
 import com.shawn.stopscroll.ai.AiService
@@ -31,6 +34,27 @@ class StopScrollAccessibilityService : AccessibilityService() {
     private var lastInterceptTime = 0L
     private var aiMonitoringJob: Job? = null
 
+    // 缓存输入法软键盘包名，避免打字被误判为离开应用
+    private var imePackages = setOf<String>()
+    private var lastImeQueryTime = 0L
+
+    // 息屏/锁屏广播监听：手机一锁屏，立刻停止后台计时并按实结算，绝不后台偷跑时间
+    private val screenOffReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Intent.ACTION_SCREEN_OFF) {
+                val current = SessionManager.currentSession
+                if (current != null) {
+                    val appName = current.appName.ifBlank { getAppName(current.packageName) }
+                    Log.i("StopScroll", "📱 Screen off detected! Settling active session for ${current.packageName}")
+                    val settled = SessionManager.settleAndEndSession("锁屏息屏")
+                    if (settled > 0) {
+                        Log.i("StopScroll", "Screen off settled: $settled min(s) for $appName")
+                    }
+                }
+            }
+        }
+    }
+
     // 刚性主动倒计时任务
     private val timeoutRunnable = Runnable {
         handleTimeout()
@@ -40,6 +64,14 @@ class StopScrollAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         instance = this
         Log.i("StopScroll", "AccessibilityService connected successfully!")
+
+        // 注册息屏广播接收器
+        try {
+            val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
+            registerReceiver(screenOffReceiver, filter)
+        } catch (e: Exception) {
+            Log.e("StopScroll", "Error registering screenOffReceiver: ${e.message}")
+        }
 
         // 注册主动倒计时与监听回调
         SessionManager.onSessionStartedCallback = { pkg, goal, minutes ->
@@ -60,6 +92,11 @@ class StopScrollAccessibilityService : AccessibilityService() {
         }
         mainHandler.removeCallbacks(timeoutRunnable)
         aiMonitoringJob?.cancel()
+        try {
+            unregisterReceiver(screenOffReceiver)
+        } catch (e: Exception) {
+            // ignore
+        }
     }
 
     /**
@@ -79,11 +116,12 @@ class StopScrollAccessibilityService : AccessibilityService() {
         aiMonitoringJob?.cancel()
         val session = SessionManager.currentSession ?: return
         val pkg = session.packageName
+        val appName = session.appName.ifBlank { getAppName(pkg) }
         val goal = session.userGoal
-        val minutes = ((session.expireTime - session.startTime) / 60000L).coerceAtLeast(1)
 
         Log.i("StopScroll", "⏰ PROACTIVE TIMER FIRED! Time is up for $pkg ($goal)")
-        SessionManager.endSession()
+        val actualMinutes = SessionManager.settleAndEndSession("专注时长已用尽")
+        val minutes = actualMinutes.coerceAtLeast(1)
 
         // 强震动提示
         vibrateDevice(800L)
@@ -146,7 +184,7 @@ class StopScrollAccessibilityService : AccessibilityService() {
                             showToast("⚠️ AI 提醒：疑似偏离目标 (${session.consecutiveViolations}/2)\n原因: ${result.reason}")
 
                             if (session.consecutiveViolations >= 2) {
-                                SessionManager.endSession()
+                                SessionManager.settleAndEndSession("偏离目标强制中断")
                                 aiMonitoringJob?.cancel()
                                 vibrateDevice(600L)
                                 triggerAlert(
@@ -168,6 +206,20 @@ class StopScrollAccessibilityService : AccessibilityService() {
         }
     }
 
+    private fun isImePackage(pkgName: String): Boolean {
+        val now = System.currentTimeMillis()
+        if (now - lastImeQueryTime > 30000L || imePackages.isEmpty()) {
+            lastImeQueryTime = now
+            try {
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                imePackages = imm?.enabledInputMethodList?.map { it.packageName }?.toSet() ?: emptySet()
+            } catch (e: Throwable) {
+                // ignore
+            }
+        }
+        return imePackages.contains(pkgName)
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         try {
             if (event == null) return
@@ -180,7 +232,39 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 return
             }
 
-            // 2. 判别是否是微信子功能（视频号 / 朋友圈）或普通受控应用
+            // 2. 🌟 离开受控应用实时检测：当用户切回桌面、离开当前受控应用或切换其他App时，立即按实际使用结算并停止后台计时！
+            if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                val currentSession = SessionManager.currentSession
+                if (currentSession != null) {
+                    val isSystemOrOverlay = pkgName == packageName ||
+                            pkgName == "com.android.systemui" ||
+                            pkgName == "android" ||
+                            isImePackage(pkgName)
+
+                    if (!isSystemOrOverlay) {
+                        val stillInCurrentApp = if (currentSession.packageName == "com.tencent.mm:finder") {
+                            pkgName == "com.tencent.mm" && (className.contains("plugin.finder") || className.contains("FinderHome"))
+                        } else if (currentSession.packageName == "com.tencent.mm:moments") {
+                            pkgName == "com.tencent.mm" && (className.contains("plugin.sns") || className.contains("SnsTimeLine"))
+                        } else {
+                            pkgName == currentSession.packageName
+                        }
+
+                        if (!stillInCurrentApp) {
+                            val appName = currentSession.appName.ifBlank { getAppName(currentSession.packageName) }
+                            val settledMinutes = SessionManager.settleAndEndSession("离开受控应用")
+                            Log.i("StopScroll", "User left $appName, settled $settledMinutes min(s)")
+                            if (settledMinutes > 0) {
+                                showToast("【$appName】已退出，本次实际使用 ${settledMinutes} 分钟，已精准入账！")
+                            } else {
+                                Log.i("StopScroll", "User quickly exited $appName (<25s), 0 min recorded.")
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. 判别是否是微信子功能（视频号 / 朋友圈）或普通受控应用
             var effectivePkg = pkgName
             if (pkgName == "com.tencent.mm") {
                 if (PrefManager.wechatFinderEnabled && (className.contains("plugin.finder") || className.contains("FinderHome"))) {
@@ -195,7 +279,7 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 return
             }
 
-            // 3. 🌙 检查是否处于夜间防沉迷宵禁时段！如果处于宵禁，直接强阻断，不允许打开！
+            // 4. 🌙 检查是否处于夜间防沉迷宵禁时段！如果处于宵禁，直接强阻断，不允许打开！
             if (PrefManager.isInCurfew()) {
                 val now = System.currentTimeMillis()
                 if (now - lastInterceptTime > 1500L) {
@@ -217,7 +301,7 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 return
             }
 
-            // 4. 如果当前应用【没有合法 Session】，并且是【窗口打开切换事件】-> 触发意图拦截或配额免审放行！
+            // 5. 如果当前应用【没有合法 Session】，并且是【窗口打开切换事件】-> 触发意图拦截或配额免审放行！
             if (!SessionManager.isSessionActiveFor(effectivePkg)) {
                 if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                     val now = System.currentTimeMillis()
@@ -240,17 +324,14 @@ class StopScrollAccessibilityService : AccessibilityService() {
                                 val chunkMinutes = minOf(appRemain, totalRemain, 15).coerceAtLeast(1)
                                 val appDisplayName = getAppName(effectivePkg)
 
-                                SessionManager.startSession(effectivePkg, "今日预分配预算自由支配", chunkMinutes)
-                                com.shawn.stopscroll.data.RecordManager.addRecord(
+                                SessionManager.startSession(
                                     packageName = effectivePkg,
                                     appName = appDisplayName,
                                     userGoal = "每日规划配额自由使用",
                                     durationMinutes = chunkMinutes
                                 )
 
-                                val leftApp = (appRemain - chunkMinutes).coerceAtLeast(0)
-                                val leftTotal = (totalRemain - chunkMinutes).coerceAtLeast(0)
-                                showToast("🟢 配额免审畅刷：【$appDisplayName】本次${chunkMinutes}分钟 (今日还剩${leftApp}分/总预算剩${leftTotal}分)")
+                                showToast("🟢 配额免审畅刷：【$appDisplayName】本次上限${chunkMinutes}分钟 (退出即结算，不耗多余时间)")
                                 Log.i("StopScroll", "Fast-pass granted for $effectivePkg ($chunkMinutes min)")
                                 return
                             }
@@ -263,7 +344,7 @@ class StopScrollAccessibilityService : AccessibilityService() {
                 return
             }
 
-            // 5. 当前处于合法使用 Session 中，兜底检查超时（主要依靠 Handler 主动定时器）
+            // 6. 当前处于合法使用 Session 中，兜底检查超时（主要依靠 Handler 主动定时器）
             if (SessionManager.isExpired()) {
                 handleTimeout()
                 return

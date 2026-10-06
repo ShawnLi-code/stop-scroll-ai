@@ -217,11 +217,8 @@ class InterceptDialogActivity : AppCompatActivity() {
                     "${durationMinutes}分钟"
                 }
 
-                // Start session in SessionManager (which automatically schedules proactive timer!)
-                SessionManager.startSession(targetPackage, goal, durationMinutes)
-
-                // 写入本地使用与自律记录
-                com.shawn.stopscroll.data.RecordManager.addRecord(
+                // 启动活跃 Session 与倒计时；在退出应用或超时阻断时精准按实结算，绝不提前扣除！
+                SessionManager.startSession(
                     packageName = targetPackage,
                     appName = appName,
                     userGoal = goal,
