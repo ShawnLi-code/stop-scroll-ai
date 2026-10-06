@@ -50,7 +50,7 @@ class StopScrollAccessibilityService : AccessibilityService() {
             aiMonitoringJob?.cancel()
         }
 
-        showToast("【别刷了 AI】守护服务已激活！")
+        showToast("【定心】心流守护服务已激活！")
     }
 
     override fun onDestroy() {

@@ -52,8 +52,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun initViews() {
         try {
-            val verName = packageManager.getPackageInfo(packageName, 0).versionName ?: "1.2.0"
-            binding.tvCurrentVersionTitle.text = "v$verName · 时间预算分配 & AI 自律守护"
+            val verName = packageManager.getPackageInfo(packageName, 0).versionName ?: "1.2.1"
+            binding.tvCurrentVersionTitle.text = "v$verName · 时间预算分配 & AI 心流守护"
         } catch (_: Exception) {}
 
         // 0. Quota Fast Pass & Dashboard
@@ -152,7 +152,7 @@ class MainActivity : AppCompatActivity() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             startActivity(intent)
-            Toast.makeText(this, "请在列表中找到【别刷了 AI】并开启服务", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "请在列表中找到【定心】并开启服务", Toast.LENGTH_LONG).show()
         }
 
         binding.btnOpenOverlay.setOnClickListener {

@@ -21,16 +21,16 @@
             android:paddingTop="8dp"
             android:paddingBottom="12dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🛡️"
-                android:textSize="28sp" />
+            <ImageView
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:src="@drawable/ic_app_logo"
+                android:contentDescription="定心 Logo" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="12dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -38,7 +38,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:letterSpacing="-0.02"
-                    android:text="别刷了 AI"
+                    android:text="定心"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -47,7 +47,7 @@
                     android:id="@+id/tvCurrentVersionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="时间预算分配 &amp; AI 自律守护器"
+                    android:text="时间预算分配 &amp; AI 心流守护"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -74,7 +74,7 @@
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
                 android:text="🔄 更新"
-                android:textColor="@color/primary"
+                android:textColor="@color/text_primary"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -762,7 +762,7 @@
                 android:background="#1510B981"
                 android:padding="10dp"
                 android:text="💡 已分配配额总和：105 分钟 / 每日总预算 90 分钟"
-                android:textColor="@color/primary"
+                android:textColor="@color/text_primary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
@@ -1225,7 +1225,7 @@
                 android:lineSpacingMultiplier="1.2"
                 android:padding="8dp"
                 android:text="💡 推荐使用【智谱 GLM-4-Flash】：国内高速直连无需梯子，永久免费0费用！"
-                android:textColor="@color/primary"
+                android:textColor="@color/text_primary"
                 android:textSize="11sp" />
 
             <TextView

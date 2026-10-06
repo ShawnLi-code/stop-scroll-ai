@@ -34,41 +34,39 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release_output
-          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.2.0.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/FocusFlow-v1.2.1.apk
+          cp app/build/outputs/apk/release/app-release.apk release_output/StopScrollAI-v1.2.1.apk
           ls -lh release_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StopScrollAI-v1.2.0-APK
-          path: release_output/StopScrollAI-v1.2.0.apk
+          name: FocusFlow-v1.2.1-APK
+          path: release_output/FocusFlow-v1.2.1.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.0
-          name: StopScroll AI v1.2.0 (全系现代化高颜值UI重构 + 90分钟每日时间预算分配 + 配额内免审自由畅刷 + 苹果手机iOS设置指南)
+          tag_name: v1.2.1
+          name: 定心 (FocusFlow) v1.2.1 (全品牌升级更名「定心」+ 极光心流环内外全息Logo同步 + 视觉对比度优化)
           body: |
-            ### 🛡️ 别刷了 AI (StopScroll AI) v1.2.0 重磅版本发布
+            ### 🌟 定心 (FocusFlow) v1.2.1 品牌与视觉焕新发布
 
-            #### 核心重磅升级：
-            1. **🎨 界面颜值全面蜕变 (现代化 Linear / Apple Dark 风格重构)**：
-               - 全新深邃暗夜流光底色与 Bento Grid 便当盒卡片架构；
-               - 顶部高光时间预算看板，搭配超大数字可用余量显示与平滑双色渐变进度条；
-               - 药丸状态徽章（免审畅刷中 / 预算耗尽AI熔断中 / 审核模式中）；
-               - 彻底告别原生粗糙简陋样式，视觉体验丝滑高级！
-            2. **⏱️ 每日时间预算分配计划 (按应用预设额度)**：
-               - 预先规划全天健康总预算（默认 90 分钟，支持 30m/60m/90m/120m 或自定义）；
-               - 各受控应用独立分配可用额度（微信视频号 20m、微信朋友圈 15m、小红书 25m、抖音 20m、Twitter 10m、其他自选应用 15m）；
-               - 支持随时 `[-]` / `[+]` 增减微调，实时显示各应用今日已消耗分钟数与总和统计。
-            3. **⚡ 配额内免审自由畅刷模式 (把时间留给真正有价值的使用)**：
-               - 在今日预设的配额范围内打开应用，**无需再繁琐输入理由，无需等待 AI 审核打回**！
-               - 畅享自由支配体验，轻量无感悬浮倒计时默默守护；
-               - **一旦当日配额或总预算耗尽**，系统立即启动刚性锁死与 AI 熔断卡关，非重大紧急事由绝不放行！
-            4. **🍎 苹果手机 (iPhone / iOS) 原生自律设置指南**：
-               - 主页内置「🍎 iOS指南」弹窗，详解如何利用 iPhone 原生【屏幕使用时间】+【App 限额 (90分钟)】+【达到限额时阻止】+【微信发现页停用视频号/朋友圈】，在苹果手机上打造同等刚性自律闭环！
-            5. **🔑 永久固定签名无损覆盖升级**：
-               - 保留全部历史数据与系统无障碍授权，支持应用内一键下载更新！
-          files: release_output/StopScrollAI-v1.2.0.apk
+            #### 核心焕新内容：
+            1. **✨ 正式更名为「定心」(FocusFlow)**：
+               - 告别生硬负向的“别刷了”，升级为充满禅意、专注与从容的「定心」；
+               - 寓意心定神闲、掌控自我，抵御短视频信息流的浮躁与喧嚣。
+            2. **🪐 全新极光心流环 (Zen Flow Ring) Logo，内外界面完全同步**：
+               - 手机桌面图标：采用翡翠绿与电光紫双弧旋流、内嵌清亮微星与四芒聚光核心，极简高级；
+               - 应用内部顶栏与拦截面板：全面同步嵌入该矢量心流徽标，彻底告别粗糙纯黑与生硬 emoji！
+            3. **👀 按钮与卡片高对比度视觉修复**：
+               - 针对“检查更新”按钮在暗底绿框上字色偏暗的问题，全面优化为高清晰度明亮白字，清晰醒目；
+               - 优化配额总和与模型推荐说明的文本对比度，全场景保证高可读性。
+            4. **⏱️ 90分钟健康总预算 & 分应用规划自由支配 (配额内免审畅刷)**；
+            5. **🍎 苹果手机 (iPhone) 原生自律与防沉迷设置指南**；
+            6. **🔑 永久固定签名证书，支持应用内一键无损覆盖更新（API Key、历史数据与系统权限 100% 完整保留）**！
+          files: |
+            release_output/FocusFlow-v1.2.1.apk
+            release_output/StopScrollAI-v1.2.1.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
